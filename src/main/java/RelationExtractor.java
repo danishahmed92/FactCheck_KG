@@ -2,32 +2,45 @@ import org.apache.jena.rdf.model.*;
 
 public class RelationExtractor {
 
-    public Model model;     // provide model after file has been read
+    private Model model;     // provide model after file has been read
+    public FactCheckResource subject;
+    public Property predicate;
+    public FactCheckResource object;
 
-    public RelationExtractor(Model model) {
+    RelationExtractor(Model model) {
         this.model = model;
     }
 
     protected void parseStatements() {
         StmtIterator stmtIterator = this.model.listStatements();
+        Resource subjectNode = null;
+        RDFNode objectNode;
+
         while (stmtIterator.hasNext()) {
             Statement statement = stmtIterator.next();
 
             // look for blank node
             if (statement.getSubject().getURI().matches("^.*__[0-9]*$")) {
-                RDFNode subjectNode = statement.getSubject();
-                Property predicate = statement.getPredicate();
-                RDFNode objectNode = statement.getObject();
+                subjectNode = statement.getSubject();
+                this.predicate = statement.getPredicate();
+                objectNode = statement.getObject();
 
-                // check if object is resource and has edges
-                objectNode = getObject(statement, objectNode);
-                System.out.println(predicate.getLocalName() + "\t" +
-                        objectNode.asLiteral().getValue());
+                if (objectNode.isResource())
+                    this.object = new FactCheckResource(objectNode.asResource(), model);
+
+                // check if object is resource and has edges, parse until you get Literal
+                objectNode = getObject(statement, subjectNode, objectNode);
+                continue;
+            }
+            if (statement.getObject().isResource()
+                    && statement.getObject().asResource().getURI().equals(subjectNode.getURI())) {
+                subjectNode = statement.getSubject();
+                this.subject = new FactCheckResource(subjectNode.asResource(), model);
             }
         }
     }
 
-    private RDFNode getObject(Statement statement, RDFNode objectNode) {
+    private RDFNode getObject(Statement statement, Resource subjectNode, RDFNode objectNode) {
         if (objectNode.isLiteral())
             return objectNode;
 
@@ -40,10 +53,16 @@ public class RelationExtractor {
             StmtIterator stmtIterator = this.model.listStatements();
             while (stmtIterator.hasNext()) {
                 Statement stmt = stmtIterator.next();
+
+                if (stmt.getObject().isResource()
+                        && stmt.getObject().asResource().getURI().equals(subjectNode.asResource().getURI())) {
+                    subjectNode = stmt.getSubject();
+                }
+
                 if (stmt.getSubject().getURI().equals(objectNode.asResource().getURI())) {
                     RDFNode objNode = stmt.getObject();
 
-                    return getObject(stmt, objNode);
+                    return getObject(stmt, subjectNode, objNode);
                 }
             }
         }
