@@ -25,11 +25,8 @@ public class RelationExtractor {
                 this.predicate = statement.getPredicate();
                 objectNode = statement.getObject();
 
-                if (objectNode.isResource())
-                    this.object = new FactCheckResource(objectNode.asResource(), model);
-
                 // check if object is resource and has edges, parse until you get Literal
-                objectNode = getObject(statement, subjectNode, objectNode);
+                objectNode = getObject(statement, objectNode);
                 continue;
             }
             if (statement.getObject().isResource()
@@ -40,9 +37,11 @@ public class RelationExtractor {
         }
     }
 
-    private RDFNode getObject(Statement statement, Resource subjectNode, RDFNode objectNode) {
-        if (objectNode.isLiteral())
+    private RDFNode getObject(Statement statement, RDFNode objectNode) {
+        if (objectNode.isLiteral()) {
+            this.object = new FactCheckResource(statement.getSubject().asResource(), this.model);
             return objectNode;
+        }
 
         if (objectNode.isResource()) {
             // parse all statements again
@@ -54,15 +53,10 @@ public class RelationExtractor {
             while (stmtIterator.hasNext()) {
                 Statement stmt = stmtIterator.next();
 
-                if (stmt.getObject().isResource()
-                        && stmt.getObject().asResource().getURI().equals(subjectNode.asResource().getURI())) {
-                    subjectNode = stmt.getSubject();
-                }
-
                 if (stmt.getSubject().getURI().equals(objectNode.asResource().getURI())) {
                     RDFNode objNode = stmt.getObject();
 
-                    return getObject(stmt, subjectNode, objNode);
+                    return getObject(stmt, objNode);
                 }
             }
         }
