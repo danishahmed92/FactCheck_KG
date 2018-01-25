@@ -19,7 +19,7 @@ public class RelationExtractor {
         while (stmtIterator.hasNext()) {
             Statement statement = stmtIterator.next();
 
-            // look for blank node
+            // look for starting node
             if (statement.getSubject().getURI().matches("^.*__[0-9]*$")) {
                 subjectNode = statement.getSubject();
                 this.predicate = statement.getPredicate();

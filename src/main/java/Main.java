@@ -11,5 +11,12 @@ public class Main {
 
         RelationExtractor relationExtractor = new RelationExtractor(model);
         relationExtractor.parseStatements();
+
+        System.out.println("Subject:\t" + relationExtractor.subject.langLabelsMap.get("en"));
+        System.out.println("Predicate:\t" + relationExtractor.predicate.getLocalName());
+        System.out.println("Object:\t" + relationExtractor.object.langLabelsMap.get("en"));
+
+        System.out.println();
+        System.out.println("Object sameAs:\t" + relationExtractor.object.langAltLabelsMap.get("en"));
     }
 }
