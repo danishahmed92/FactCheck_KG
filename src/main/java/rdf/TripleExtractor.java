@@ -1,17 +1,19 @@
+package rdf;
+
 import org.apache.jena.rdf.model.*;
 
-public class RelationExtractor {
+public class TripleExtractor {
 
     private Model model;     // provide model after file has been read
     public FactCheckResource subject;
     public Property predicate;
     public FactCheckResource object;
 
-    RelationExtractor(Model model) {
+    public TripleExtractor(Model model) {
         this.model = model;
     }
 
-    protected void parseStatements() {
+    public void parseStatements() {
         StmtIterator stmtIterator = this.model.listStatements();
         Resource subjectNode = null;
         RDFNode objectNode;

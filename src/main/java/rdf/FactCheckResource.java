@@ -1,4 +1,7 @@
+package rdf;
+
 import org.apache.jena.rdf.model.*;
+import utils.Constants;
 
 import java.util.*;
 
@@ -22,8 +25,8 @@ public class FactCheckResource {
     private Property altLabelProperty = ResourceFactory.createProperty(Constants.SKOS_CORE_NAMESPACE + "altLabel");
     private Property owlSameAsProperty = ResourceFactory.createProperty(Constants.OWL_NAMESPACE + "sameAs");
 
-    protected Map<String, String> langLabelsMap = new HashMap<String, String>();
-    protected Map<String, Set<String>> langAltLabelsMap = new HashMap<String, Set<String>>();
+    public Map<String, String> langLabelsMap = new HashMap<String, String>();
+    public Map<String, Set<String>> langAltLabelsMap = new HashMap<String, Set<String>>();
 
     protected List<Resource> owlSameAsList = new ArrayList<Resource>();
     protected Map<String, List<String>> sameAsLangMap = new HashMap<String, List<String>>();
