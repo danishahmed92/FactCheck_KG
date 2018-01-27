@@ -10,8 +10,11 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 
 public class StringFilters {
+    private ArrayList<String> stopWordsArray = new ArrayList<>();
+
     public static String toLower(String string) {
         return string.toLowerCase();
     }
@@ -33,7 +36,7 @@ public class StringFilters {
         CharTermAttribute token = tokenStream.getAttribute(CharTermAttribute.class);
         String filteredString = "";
         while (tokenStream.incrementToken()) {
-            if (Config.stopWordsArray.contains(token.toString()))
+            if (Config.configInstance.stopWordsArray.contains(token.toString()))
                 continue;
             filteredString = filteredString + token.toString() + " ";
         }

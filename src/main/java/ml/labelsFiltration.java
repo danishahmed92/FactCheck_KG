@@ -28,7 +28,6 @@ public class labelsFiltration {
         similarWords = new HashSet<String>();
         wordSimilarityMap = new HashMap<String, Double>();
 
-        Config.loadStopWords();
         getWordSimilarityScore(altLabels);
         Map<String, Double> sortedWordSimilarity = sortMapSimilarity();
 
@@ -36,6 +35,7 @@ public class labelsFiltration {
         int mostRelevantWordsCount = (int) Math.sqrt(mostDiffWordsCount);
 
         getNWordVariants(mostDiffWordsCount, mostRelevantWordsCount, sortedWordSimilarity);
+        System.out.println(similarWords);
         return similarWords;
     }
 

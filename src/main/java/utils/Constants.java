@@ -13,5 +13,6 @@ public class Constants {
 
     public static final String LINE_SEPARATOR = "\n";
 
-    public static final String STOP_WORDS_FILE = "stop_words.txt";
+    public static final String RESOURCE_DIRECTORY = "src/main/resources/";
+    public static final String CONFIG_FILE = "factCheck.ini";
 }
