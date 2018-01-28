@@ -23,6 +23,7 @@ public class Config {
     public Ini configIni;
     public ArrayList<String> stopWordsArray = new ArrayList<>();
     private String stopWordsFile;
+    public String wordNetDict;
 
     private String trainDataPath;
     private String testDataPath;
@@ -31,6 +32,7 @@ public class Config {
         configIni = new Ini(new File(Constants.RESOURCE_DIRECTORY + Constants.CONFIG_FILE));
 
         stopWordsFile = configIni.get("data", "stopWordsFile");
+        wordNetDict = configIni.get("data", "wordNetDict");
         trainDataPath = configIni.get("data", "train");
         testDataPath = configIni.get("data", "test");
     }

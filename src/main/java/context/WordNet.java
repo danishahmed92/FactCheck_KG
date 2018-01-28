@@ -1,4 +1,86 @@
 package context;
 
+import config.Config;
+import edu.cmu.lti.lexical_db.ILexicalDatabase;
+import edu.cmu.lti.lexical_db.NictWordNet;
+import edu.cmu.lti.ws4j.RelatednessCalculator;
+import edu.cmu.lti.ws4j.impl.*;
+import edu.cmu.lti.ws4j.util.WS4JConfiguration;
+import rita.RiWordNet;
+import rita.wordnet.jwnl.JWNLException;
+import rita.wordnet.jwnl.wndata.IndexWord;
+import rita.wordnet.jwnl.wndata.POS;
+import rita.wordnet.jwnl.wndata.Synset;
+import rita.wordnet.jwnl.wndata.Word;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class WordNet {
+
+    public static RiWordNet wordNet = new RiWordNet(Config.configInstance.wordNetDict);;
+    private static ILexicalDatabase db = new NictWordNet();
+    private static RelatednessCalculator[] rcs = {
+            new HirstStOnge(db), new LeacockChodorow(db), new Lesk(db),  new WuPalmer(db),
+            new Resnik(db), new JiangConrath(db), new Lin(db), new Path(db)
+    };
+
+    public static List<String> getNTopSynonyms(String word, int n) throws JWNLException {
+        List<String> synonyms = new ArrayList<>();
+        POS pos = getPartOfSpeech(word);
+
+        IndexWord indexWord = wordNet.jwnlDict.getIndexWord(pos, word);
+        if (indexWord != null) {
+            Synset[] synsets = indexWord.getSenses();
+            int bound = Math.min(n, synsets.length);
+            for (int i = 0; i < bound; i++) {
+                for (Word synsetWord : synsets[i].getWords()) {
+                    String lemma = synsetWord.getLemma();
+
+                    if (!lemma.equals(word) && !lemma.contains(" ")) {
+                        synonyms.add(lemma);
+                        System.out.println(lemma + ":\t" + getWordDefinition(lemma));
+                    }
+                }
+            }
+        }
+        return synonyms;
+    }
+
+    public static POS getPartOfSpeech(String word) {
+        String partOfSpeech = wordNet.getBestPos(word);
+        POS pos = POS.VERB;
+        switch (partOfSpeech) {
+            case "n":
+                return POS.NOUN;
+            case "v":
+                return POS.VERB;
+            case "a":
+                return POS.ADJECTIVE;
+            case "r":
+                return POS.ADVERB;
+        }
+        return pos;
+    }
+
+    public static String getWordDefinition(String word) {
+        String gloss = wordNet.getGloss(word, wordNet.getBestPos(word));
+        return gloss.toLowerCase();
+    }
+
+    public static void main(String[] args) throws IOException, JWNLException {
+
+        /*WS4JConfiguration.getInstance().setMFS(true);
+        for ( RelatednessCalculator rc : rcs ) {
+            double s = rc.calcRelatednessOfWords("award", "degree");
+            System.out.println( rc.getClass().getName()+"\t"+s );
+        }*/
+
+    }
+
+    /*public static String[] getSynonymsSimilaritySorted(String word) {
+        String partOfSpeech = wordNet.getBestPos(word);
+        return wordNet.getAllSynonyms(word, partOfSpeech);
+    }*/
 }

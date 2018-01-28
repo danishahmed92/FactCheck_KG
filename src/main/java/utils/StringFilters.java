@@ -33,6 +33,9 @@ public class StringFilters {
         tokenStream.reset();
 
 //        filtering from stop_words.txt file
+        if (Config.configInstance.stopWordsArray.size() == 0)
+            Config.configInstance.loadStopWords();;
+
         CharTermAttribute token = tokenStream.getAttribute(CharTermAttribute.class);
         String filteredString = "";
         while (tokenStream.incrementToken()) {
