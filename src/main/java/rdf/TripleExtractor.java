@@ -23,14 +23,29 @@ public class TripleExtractor {
 
             // look for starting node
             if (statement.getSubject().getURI().matches("^.*__[0-9]*$")) {
-                subjectNode = statement.getSubject();
-                this.predicate = statement.getPredicate();
-                objectNode = statement.getObject();
+                if (statement.getObject().isResource()) {
+                    subjectNode = statement.getSubject();
+                    this.predicate = statement.getPredicate();
+                    objectNode = statement.getObject();
 
-                // check if object is resource and has edges, parse until you get Literal
-                objectNode = getObject(statement, objectNode);
-                continue;
+                    // check if object is resource and has edges, parse until you get Literal
+                    getObject(statement, objectNode);
+
+                    // now find if current statement subject node is part of object node
+                    // then make that node as subject
+                    if (subjectNode == null)
+                        continue;
+                    getSubject(subjectNode);
+                }
             }
+        }
+    }
+
+    private void getSubject(Resource subjectNode) {
+        StmtIterator stmtIterator = this.model.listStatements();
+        while (stmtIterator.hasNext()) {
+            Statement statement = stmtIterator.next();
+
             if (statement.getObject().isResource()
                     && statement.getObject().asResource().getURI().equals(subjectNode.getURI())) {
                 subjectNode = statement.getSubject();
@@ -57,6 +72,7 @@ public class TripleExtractor {
 
                 if (stmt.getSubject().getURI().equals(objectNode.asResource().getURI())) {
                     RDFNode objNode = stmt.getObject();
+                    this.object = new FactCheckResource(stmt.getSubject().asResource(), this.model);
 
                     return getObject(stmt, objNode);
                 }

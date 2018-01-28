@@ -28,8 +28,7 @@ public class FactCheckResource {
     public Map<String, String> langLabelsMap = new HashMap<String, String>();
     public Map<String, Set<String>> langAltLabelsMap = new HashMap<String, Set<String>>();
 
-    protected List<Resource> owlSameAsList = new ArrayList<Resource>();
-    protected Map<String, List<String>> sameAsLangMap = new HashMap<String, List<String>>();
+    public List<Resource> owlSameAsList = new ArrayList<Resource>();     // currently only for en lang
 
     FactCheckResource(Resource resource, Model model) {
         this.resource = resource;
@@ -81,5 +80,22 @@ public class FactCheckResource {
             NodeIterator altLabelNodeIterator = this.model.listObjectsOfProperty(rdfNode.asResource(), this.altLabelProperty);
             setLabelsMap(altLabelNodeIterator, NodeIteratorType.SAME_AS);
         }
+    }
+
+    public static String getDBpediaUri(FactCheckResource resource) {
+        String uri = resource.uri;
+        if (uri.contains(Constants.DBPEDIA_URI))
+            return uri;
+
+        List<Resource> subjectSameAsList = resource.owlSameAsList;
+        String subjectUri = "";
+
+        for (Resource rsc : subjectSameAsList) {
+            if (rsc.toString().contains(Constants.DBPEDIA_URI)) {
+                subjectUri = rsc.toString();
+                break;
+            }
+        }
+        return subjectUri;
     }
 }
