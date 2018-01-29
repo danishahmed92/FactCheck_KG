@@ -1,0 +1,47 @@
+# ?s p o
+#All subjects, predicate and objects fixed w.r.t input subject
+#get properties and count having same values in all subjects
+SELECT ?p ?freq WHERE {
+    {SELECT ?s ?p count(?o) as ?freq WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        } .
+        FILTER (?p = ?pred && ?o = ?obj) {
+            SELECT ?pred ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> ?pred ?obj }
+        }
+    }}
+    FILTER (?s = <http://dbpedia.org/resource/Albert_Einstein>)
+} order by desc(?freq)
+
+
+# s p ?o
+SELECT ?p ?freq WHERE {
+    {SELECT ?o ?p count(?s) as ?freq WHERE { 
+        ?s ?p ?o .
+        FILTER (?o = ?obj) {
+            SELECT ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://dbpedia.org/ontology/award> ?obj }
+        } .
+        FILTER (?p = ?pred && ?s = ?sub) {
+            SELECT ?sub ?pred WHERE { ?sub ?pred <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        }
+    }}
+    FILTER (?o = <http://dbpedia.org/resource/Nobel_Prize_in_Physics>)
+} order by desc(?freq)
+
+# s ?p o
+SELECT ?o ?freq WHERE {
+    {SELECT ?o ?p count(?s) as ?freq WHERE { 
+        ?s ?p ?o .
+        FILTER (?p = ?pred) {
+            SELECT ?pred WHERE { <http://dbpedia.org/resource/Albert_Einstein> ?pred <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        } .
+        FILTER (?o = ?obj && ?s = ?sub) {
+            SELECT ?sub ?obj WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }
+        }
+    }}
+    FILTER (?p = <http://dbpedia.org/ontology/award>)
+    FILTER (?o = ?ob) {
+        SELECT ?ob WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://dbpedia.org/ontology/award> ?ob }
+    }
+} order by desc(?freq)
