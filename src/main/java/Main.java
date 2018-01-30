@@ -26,9 +26,13 @@ public class Main {
         Property predicate = tripleExtractor.predicate;
         FactCheckResource object = tripleExtractor.object;
 
-        System.out.println("Subject:\t" + subject.langLabelsMap.get("en"));
-        System.out.println("Predicate:\t" + predicate.getLocalName());
-        System.out.println("Object:\t" + object.langLabelsMap.get("en"));
+        String objectLabel = object.langLabelsMap.get("en");
+        String predicateLabel = predicate.getLocalName();
+        String subjectLabel = subject.langLabelsMap.get("en");
+
+        System.out.println("Subject:\t" + subjectLabel);
+        System.out.println("Predicate:\t" + predicateLabel);
+        System.out.println("Object:\t" + objectLabel);
 
         System.out.println();
         System.out.println("Object sameAs size:\t" + tripleExtractor.object.langAltLabelsMap.get("en").size());
@@ -36,49 +40,72 @@ public class Main {
         System.out.println();
 
         /* Get authentic labels with variety */
-        System.out.println("Authentic label variants:");
-        labelsFiltration.altLabelVariantsSimilarityBased(object, "en");
+        System.out.println("Authentic label variants of object:");
+        Set<String> objectLabelVariants = labelsFiltration.altLabelVariantsSimilarityBased(object, "en");
+        System.out.println(objectLabelVariants);
         System.out.println();
 
         /* Get best synonyms for property (predicate) label */
         List<String> predicateSynonyms = new ArrayList<>();
         try {
-            predicateSynonyms = WordNet.getNTopSynonyms(predicate.getLocalName(), 5);
+            predicateSynonyms = WordNet.getNTopSynonyms(predicateLabel, 5);
             System.out.println();
-            System.out.println("best synonyms for predicate " + predicate.getLocalName() + ":");
+            System.out.println("best synonyms for predicate " + predicateLabel + ":");
             System.out.println(predicateSynonyms);
             System.out.println();
         } catch (JWNLException e) {
             e.printStackTrace();
         }
 
-        System.out.println("Jaccard similarity of synonyms w.r.t object label: (Actual word = " + predicate.getLocalName() + ")");
+        System.out.println("Jaccard similarity of synonyms w.r.t object label: (Actual word = " + predicateLabel + ")");
         for (String syn : predicateSynonyms) {
-            double totalWeight = Similarity.getSemanticSimilarity(object.langLabelsMap.get("en"), syn, predicate.getLocalName());
+            double totalWeight = Similarity.getSemanticSimilarity(objectLabel, syn, predicateLabel);
             System.out.println(syn + "\t\tsemantic score:" + totalWeight);
         }
         System.out.println();
 
         /* Get all properties of subject */
         String query = String.format(Queries.ALL_PREDICATES_OF_SUBJECT, "<" + FactCheckResource.getDBpediaUri(subject) + ">");
-        List<String> results = Queries.execute(query);
+        List<String> results = Queries.execute(query, "predicate");
         System.out.println("List all properties of Subject:");
         System.out.println(results);
 
-        Set<String> objectSetString = new HashSet<String>(Arrays.asList(object.langLabelsMap.get("en").split(" ")));
+        Set<String> objectSetString = new HashSet<String>(Arrays.asList(objectLabel.split(" ")));
         System.out.println();
-        System.out.println("properties of subjects as words:");
+//        System.out.println("properties of subjects as words:");
+        Map<String, Double> propertySimilarityMap = new HashMap<String, Double>();
         for (String property : results) {
             int index = property.lastIndexOf('/') + 1;
             property = property.substring(index, property.length());
             property = property.replaceAll("\\d+", "").replaceAll("(.)([A-Z])", "$1 $2");
-            if (property.contains("#"))
+            if (property.contains("#") || property.equals(predicateLabel))
                 continue;
-            Set<String> propertySetString = new HashSet<String>(Arrays.asList(property.split(" ")));
 
-//            Similarity similarity = new Similarity(object.langLabelsMap.get("en"), property, true);
-//            System.out.println(property + ": \t\t" + "Jaccard set:" + Similarity.jaccardSimilarity(objectSetString, propertySetString));
-            System.out.println(property);
+            double propertyPredicateScore = 0;
+            double propertySynonymScore = 0;
+
+            propertyPredicateScore = Similarity.getSemanticSimilarity(objectLabel, property, predicateLabel);
+            for (String synonym : predicateSynonyms) {
+                propertySynonymScore = Similarity.getSemanticSimilarity(objectLabel, property, synonym);
+            }
+            double similarityScore = propertyPredicateScore + propertySynonymScore;
+
+            if (similarityScore == 0 || Double.isNaN(similarityScore))
+                continue;
+            propertySimilarityMap.put(property, similarityScore);
         }
+
+//        propertySimilarityMap = labelsFiltration.sortMapSimilarity(propertySimilarityMap);
+
+
+        /* Get all subject */
+        query = String.format(Queries.PREDICATE_OBJECT_FIXED,
+                "<" + predicate.getURI() + ">",
+                "<" + FactCheckResource.getDBpediaUri(object) + ">");
+        results.clear();
+        results = Queries.execute(query, "subject");
+        System.out.println("");
+        System.out.println("List all Subjects:");
+        System.out.println(results);
     }
 }

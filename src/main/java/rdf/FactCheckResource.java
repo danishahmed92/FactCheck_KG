@@ -20,7 +20,7 @@ public class FactCheckResource {
 
     protected Resource resource;
     protected Model model;
-    protected String uri;
+    public String uri;
     private Property labelProperty = ResourceFactory.createProperty(Constants.RDF_SCHEMA_NAMESPACE + "label");
     private Property altLabelProperty = ResourceFactory.createProperty(Constants.SKOS_CORE_NAMESPACE + "altLabel");
     private Property owlSameAsProperty = ResourceFactory.createProperty(Constants.OWL_NAMESPACE + "sameAs");
@@ -93,7 +93,7 @@ public class FactCheckResource {
         for (Resource rsc : subjectSameAsList) {
             if (rsc.toString().contains(Constants.DBPEDIA_URI)) {
                 subjectUri = rsc.toString();
-                break;
+//                break;
             }
         }
         return subjectUri;

@@ -65,7 +65,10 @@ public class WordNet {
     }
 
     public static String getWordDefinition(String word) {
-        String gloss = wordNet.getGloss(word, wordNet.getBestPos(word));
+        String partOfSpeech = wordNet.getBestPos(word);
+        if (partOfSpeech == null)
+            return "";
+        String gloss = wordNet.getGloss(word, partOfSpeech);
         return gloss.toLowerCase();
     }
 

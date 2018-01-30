@@ -92,7 +92,7 @@ public class Similarity {
         Set<String> synSet = new HashSet<String>(Arrays.asList(similarity.string2.split(" ")));
 
         double weight = (Similarity.jaccardSimilarity(objSet, synSet)
-                + similarity.jaccardSimilarity()
+                + similarity.cosineSimilarity()
                 + new Levenshtein().similarity(similarity.string1, similarity.string2)) / 3;
         double definitionSimilarity = Similarity.getDefBasedSimilarity(word, similarity.string2);
 

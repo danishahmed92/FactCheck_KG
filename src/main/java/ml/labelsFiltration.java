@@ -29,13 +29,12 @@ public class labelsFiltration {
         wordSimilarityMap = new HashMap<String, Double>();
 
         getWordSimilarityScore(altLabels);
-        Map<String, Double> sortedWordSimilarity = sortMapSimilarity();
+        Map<String, Double> sortedWordSimilarity = sortMapSimilarity(wordSimilarityMap);
 
         int mostDiffWordsCount = (int) Math.sqrt(wordSimilarityMap.size()) + 1;
         int mostRelevantWordsCount = (int) Math.sqrt(mostDiffWordsCount);
 
         getNWordVariants(mostDiffWordsCount, mostRelevantWordsCount, sortedWordSimilarity);
-        System.out.println(similarWords);
         return similarWords;
     }
 
@@ -48,7 +47,7 @@ public class labelsFiltration {
         }
     }
 
-    public static Map<String, Double> sortMapSimilarity() {
+    public static Map<String, Double> sortMapSimilarity(Map<String, Double> wordSimilarityMap) {
         return wordSimilarityMap.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue())
                 .collect(Collectors.toMap(

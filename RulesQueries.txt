@@ -14,6 +14,26 @@ SELECT ?p ?freq WHERE {
     FILTER (?s = <http://dbpedia.org/resource/Albert_Einstein>)
 } order by desc(?freq)
 
+--------------------------------------------------
+
+SELECT ?p ?freq WHERE {
+    {SELECT ?s ?p (COUNT(?o) AS ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        } .
+        FILTER (?p = ?pred && ?o = ?obj) {
+            SELECT ?pred ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> ?pred ?obj }
+        }
+    }
+    GROUP BY ?s ?p}
+    FILTER (?s = <http://dbpedia.org/resource/Albert_Einstein>)
+} 
+GROUP BY ?p ?freq
+ORDER BY DESC(?freq)
+
+*****************************************************************************************************************************************
+
 
 # s p ?o
 SELECT ?p ?freq WHERE {
@@ -28,6 +48,26 @@ SELECT ?p ?freq WHERE {
     }}
     FILTER (?o = <http://dbpedia.org/resource/Nobel_Prize_in_Physics>)
 } order by desc(?freq)
+
+----------------------------------------------------------------
+
+SELECT ?p ?freq WHERE {
+    {SELECT ?o ?p (COUNT(?s) AS ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?o = ?obj) {
+            SELECT ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://dbpedia.org/ontology/award> ?obj }
+        } .
+        FILTER (?p = ?pred && ?s = ?sub) {
+            SELECT ?sub ?pred WHERE { ?sub ?pred <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        }
+    }
+    GROUP BY ?p ?o}
+    FILTER (?o = <http://dbpedia.org/resource/Nobel_Prize_in_Physics>)
+}
+GROUP BY ?p ?freq
+ORDER BY DESC(?freq)
+
+********************************************************************************************************************
 
 # s ?p o
 SELECT ?o ?freq WHERE {
@@ -45,3 +85,26 @@ SELECT ?o ?freq WHERE {
         SELECT ?ob WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://dbpedia.org/ontology/award> ?ob }
     }
 } order by desc(?freq)
+
+------------------------------------------------------------------------
+
+SELECT ?o ?freq WHERE {
+    {SELECT ?o ?p (COUNT(?s) AS ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?p = ?pred) {
+            SELECT ?pred WHERE { <http://dbpedia.org/resource/Albert_Einstein> ?pred <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        } .
+        FILTER (?o = ?obj && ?s = ?sub) {
+            SELECT ?sub ?obj WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }
+        }
+    }
+    GROUP BY ?o ?p}
+    FILTER (?p = <http://dbpedia.org/ontology/award>)
+    FILTER (?o = ?ob) {
+        SELECT ?ob WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://dbpedia.org/ontology/award> ?ob }
+    }
+}
+GROUP BY ?o ?freq
+ORDER BY DESC(?freq)
+
+****************************************************************************************************************************
