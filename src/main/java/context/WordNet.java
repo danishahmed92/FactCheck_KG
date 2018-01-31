@@ -37,11 +37,8 @@ public class WordNet {
             for (int i = 0; i < bound; i++) {
                 for (Word synsetWord : synsets[i].getWords()) {
                     String lemma = synsetWord.getLemma();
-
-                    if (!lemma.equals(word) && !lemma.contains(" ")) {
+                    if (!lemma.equals(word) && !lemma.contains(" "))
                         synonyms.add(lemma);
-                        System.out.println(lemma + ":\t" + getWordDefinition(lemma));
-                    }
                 }
             }
         }

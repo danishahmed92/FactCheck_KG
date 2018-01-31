@@ -39,5 +39,6 @@
     <orderEntry type="library" name="Maven: info.debatty:java-string-similarity:0.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:7.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:7.2.1" level="project" />
+    <orderEntry type="library" name="Maven: mysql:mysql-connector-java:6.0.6" level="project" />
   </component>
 </module>

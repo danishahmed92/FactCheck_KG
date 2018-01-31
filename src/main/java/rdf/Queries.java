@@ -70,6 +70,52 @@ public class Queries {
             "GROUP BY ?o ?freq\n" +
             "ORDER BY DESC(?freq)";
 
+    public static final String GET_RANKED_PROPERTY_VALUES_OF_SUBJECT = "" +
+            "SELECT ?o (COUNT(?o) AS ?freq) WHERE { \n" +
+            "        ?s ?p ?o .\n" +
+            "        {SELECT ?o WHERE {\n" +
+            "        %s %s ?o .\n" +
+            "        }}\n" +
+            "        FILTER (?s = ?sub) {\n" +
+            "            SELECT ?sub WHERE { ?sub %s %s }\n" +
+            "        } .\n" +
+            "    }\n" +
+            "GROUP BY ?o\n" +
+            "ORDER BY DESC(?freq)";
+
+    public static String getQueryRankedPropertiesHiddenSubject(String predicateUri, String objectUri, String subjectUri) {
+        return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_SUBJECT,
+                predicateUri,
+                objectUri,
+                subjectUri,
+                subjectUri);
+    }
+
+    public static String getQueryRankedPropertiesHiddenObject(String subjectUri, String predicateUri, String objectUri) {
+        return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_OBJECT,
+                subjectUri,
+                predicateUri,
+                objectUri,
+                objectUri);
+    }
+
+    public static String getQueryRankedObjectHiddenProperties(String subjectUri, String objectUri, String predicateUri) {
+        return String.format(Queries.GET_RANKED_OBJECTS_HIDDEN_PROPERTIES,
+                subjectUri,
+                objectUri,
+                predicateUri,
+                predicateUri,
+                subjectUri,
+                predicateUri);
+    }
+
+    public static String getQueryRankedPropertyValues(String subjectUri, String propertyUri, String predicateUri, String objectUri) {
+        return String.format(Queries.GET_RANKED_PROPERTY_VALUES_OF_SUBJECT,
+                subjectUri,
+                propertyUri,
+                predicateUri,
+                objectUri);
+    }
 
     public static List<String> execute(String queryString, String column) {
         Query query = QueryFactory.create(queryString);

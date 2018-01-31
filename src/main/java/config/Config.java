@@ -21,9 +21,17 @@ public class Config {
     }
 
     public Ini configIni;
+
     public ArrayList<String> stopWordsArray = new ArrayList<>();
     private String stopWordsFile;
+
     public String wordNetDict;
+
+    public String dbHost;
+    public String dbPort;
+    public String database;
+    public String dbUser;
+    public String dbPassword;
 
     private String trainDataPath;
     private String testDataPath;
@@ -35,6 +43,12 @@ public class Config {
         wordNetDict = configIni.get("data", "wordNetDict");
         trainDataPath = configIni.get("data", "train");
         testDataPath = configIni.get("data", "test");
+
+        dbHost = configIni.get("mysql", "dbHost");
+        dbPort = configIni.get("mysql", "port");
+        database = configIni.get("mysql", "database");
+        dbUser = configIni.get("mysql", "dbUser");
+        dbPassword = configIni.get("mysql", "dbPassword");
     }
 
     public void loadStopWords() throws IOException {

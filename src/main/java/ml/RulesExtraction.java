@@ -1,54 +1,242 @@
 package ml;
 
+import config.Config;
+import config.Database;
+import context.Similarity;
+import context.WordNet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import rdf.FactCheckResource;
 import rdf.Queries;
+import rdf.TripleExtractor;
+import rita.wordnet.jwnl.JWNLException;
+import utils.Util;
 
-import java.util.Map;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.*;
+import java.util.*;
 
+/*
+ * Step 1:
+ * read rdf file and extract triples
+ * Get labels of subject and object
+ *
+ * Step 2:
+ * Get filtered alternative labels (only those that are close enough to actual labels)
+ *
+ * step 3 (RULE #1):
+ * get other properties from same subject that closely matches with object according to semantics
+ * select only the property with maximum score
+ *
+ * Step 4 (RULE #2):
+ * get all the properties in ranked order comparing with all the subjects that share same object
+ * (RULE #2.1)
+ * Those properties that are generic and have high rank,
+ * get values count of those properties based on subject, and is shared by other subjects having same object
+ *
+ * Step 5 (RULE #3):
+ * get all properties in ranked order that are relevant to object,
+ * but is shared by all subjects also sharing same object
+ *
+ * Step 6 (RULE #4)
+ * get all objects in ranked order that are relevant to subject,
+ * and is also shared by other subjects having same property
+ *
+ * Step 7:
+ * Compute confidence value for each extracted data value
+ *
+ * Step 8:
+ * Store result retrieved (according to threshold) in database
+ *
+ *
+ *
+ * */
 public class RulesExtraction {
     public static final String QUERY_VAR_SUBJECT = "s";
     public static final String QUERY_VAR_OBJECT = "o";
     public static final String QUERY_VAR_PREDICATE = "p";
 
-    public static String getQueryRankedPropertiesHiddenSubject(String predicateUri, String objectUri, String subjectUri) {
-        return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_SUBJECT,
-                predicateUri,
-                objectUri,
-                subjectUri,
-                subjectUri);
-    }
-
-    public static String getQueryRankedPropertiesHiddenObject(String subjectUri, String predicateUri, String objectUri) {
-        return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_OBJECT,
-                subjectUri,
-                predicateUri,
-                objectUri,
-                objectUri);
-    }
-
-    public static String getQueryRankedObjectHiddenProperties(String subjectUri, String objectUri, String predicateUri) {
-        return String.format(Queries.GET_RANKED_OBJECTS_HIDDEN_PROPERTIES,
-                subjectUri,
-                objectUri,
-                predicateUri,
-                predicateUri,
-                subjectUri,
-                predicateUri);
-    }
-
     public static void main(String[] args) {
-        /*String query = getQueryRankedPropertiesHiddenSubject("<http://dbpedia.org/ontology/award>",
-                "<http://dbpedia.org/resource/Nobel_Prize_in_Physics>",
-                "<http://dbpedia.org/resource/Albert_Einstein>");
-        Map<String, Integer> propertyFreqMap = Queries.execFreq(query, QUERY_VAR_PREDICATE);*/
+        try {
+            ExtractedFeatures extractedFeatures = extractRulesForRDFFile("Einsteini.ttl");
 
-        /*String query = getQueryRankedPropertiesHiddenObject("<http://dbpedia.org/resource/Albert_Einstein>",
-                "<http://dbpedia.org/ontology/award>",
-                "<http://dbpedia.org/resource/Nobel_Prize_in_Physics>");
-        Map<String, Integer> propertyFreqMap = Queries.execFreq(query, QUERY_VAR_PREDICATE);*/
+            /* DB try object save */
+            String writeQuery = "INSERT INTO award(extracted_feature_obj) VALUES (?)";
+            try {
+                Connection conn = Database.databaseInstance.conn;
+                PreparedStatement prepareStatement = conn.prepareStatement(writeQuery);
+                // set input parameters
+                prepareStatement.setObject(1, extractedFeatures);
+                prepareStatement.executeUpdate();
+                // get the generated key for the id
+                ResultSet rs = prepareStatement.getGeneratedKeys();
+                int id = -1;
+                if (rs.next()) {
+                    id = rs.getInt(1);
+                }
 
-        String query = getQueryRankedObjectHiddenProperties("<http://dbpedia.org/resource/Albert_Einstein>",
-                "<http://dbpedia.org/resource/Nobel_Prize_in_Physics>",
-                "<http://dbpedia.org/ontology/award>");
-        Map<String, Integer> propertyFreqMap = Queries.execFreq(query, QUERY_VAR_OBJECT);
+                rs.close();
+                prepareStatement.close();
+                System.out.println("writeJavaObject: done serializing (id): " + id);
+
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JWNLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ExtractedFeatures extractRulesForRDFFile(String fileName) throws IOException, JWNLException {
+        /* Step 1 */
+        TripleExtractor tripleExtractor = getTriples("Einstein.ttl");
+        FactCheckResource subject = tripleExtractor.subject;
+        Property predicate = tripleExtractor.predicate;
+        FactCheckResource object = tripleExtractor.object;
+
+        String subjectUri = String.format("<%s>", FactCheckResource.getDBpediaUri(subject));
+        String predicateUri = String.format("<%s>", predicate.getURI());
+        String objectUri = String.format("<%s>", FactCheckResource.getDBpediaUri(object));
+
+        /* Step 1, 2 */
+        ExtractedFeatures extractedFeatures = new ExtractedFeatures(subject, predicate, object);
+
+        /* Step 3 (RULE #1) */
+        Map<String, Double> semanticSubjectPropertiesMap = rule1SemanticSubjectProperties(subject, object, predicate);
+        extractedFeatures.setSemanticSubjectProperty(semanticSubjectPropertiesMap.keySet().toArray()[semanticSubjectPropertiesMap.size()-1].toString(),
+                Double.parseDouble(semanticSubjectPropertiesMap.values().toArray()[semanticSubjectPropertiesMap.size()-1].toString()));
+
+        int threshold = 0;
+
+        /* Step 4 (RULE #2)*/
+        Map<String, Integer> propertiesOfAllSubjSameObjMap = rule2RankedPropertiesOfAllSubjSameObj(subjectUri, predicateUri, objectUri);
+        extractedFeatures.setPropertiesOfAllSubjSameObjMap(propertiesOfAllSubjSameObjMap);
+        /* (RULE #2.1)*/
+        extractedFeatures.setPropertiesValuesRankedMap(extractPropertyValuesFromTriple(propertiesOfAllSubjSameObjMap, subjectUri, predicateUri, objectUri));
+
+        /* Step 5 (RULE #3)*/
+        Map<String, Integer> propertiesOfAllObjSameSubjMap = rule3RankedPropertiesOfAllObjSameSubj(subjectUri, predicateUri, objectUri);
+        extractedFeatures.setPropertiesOfAllObjSameSubjMap(propertiesOfAllObjSameSubjMap);
+
+        /* Step 6 (RULE #4)*/
+        Map<String, Integer> objOfAllSubjSamePropertyMap = rule4RankedObjOfAllSubjSameProperty(subjectUri, predicateUri, objectUri);
+        extractedFeatures.setObjOfAllSubjSamePropertyMap(objOfAllSubjSamePropertyMap);
+
+        return  extractedFeatures;
+    }
+
+    public static Map<String, Map<String, Integer>> extractPropertyValuesFromTriple(Map<String, Integer> propertiesOfAllSubjSameObjMap, String subjectUri, String predicateUri, String objectUri) {
+        Object[] propertyArray = propertiesOfAllSubjSameObjMap.keySet().toArray();
+        int threshold = (int) Math.round(Math.sqrt(propertiesOfAllSubjSameObjMap.size()));
+        Map<String, Map<String, Integer>> propertiesValuesRankedMap = new LinkedHashMap<>();
+        for (int i = 0; i < threshold; i++) {
+            String propertyUri = String.format("<%s>", propertyArray[i].toString());
+            Map <String, Integer> propertyValuesMap = rule2_1PropertyValuesRanked(subjectUri, predicateUri, objectUri, propertyUri);
+
+            Map <String, Integer> reducedPropertyValuesMap = new LinkedHashMap<>();
+            if (propertiesValuesRankedMap.get(propertyArray[i].toString()) != null)
+                reducedPropertyValuesMap = propertiesValuesRankedMap.get(propertyArray[i].toString());
+
+            Iterator it = propertyValuesMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pair = (Map.Entry)it.next();
+                String property = (String) pair.getKey();
+                int index = property.lastIndexOf('/') + 1;
+                property = property.substring(index, property.length());
+                index = property.lastIndexOf(':') + 1;
+                property = property.substring(index, property.length());
+                if (property.contains("#")
+                        || property.matches(".*\\d+.*")
+                        || property.equals(predicateUri)
+                        || ((int)pair.getValue() == 1)) {
+                    it.remove();
+                    continue;
+                }
+                reducedPropertyValuesMap.put(pair.getKey().toString(), Integer.parseInt(pair.getValue().toString()));
+                it.remove(); // avoids a ConcurrentModificationException
+            }
+            propertiesValuesRankedMap.put(propertyArray[i].toString(), reducedPropertyValuesMap);
+        }
+        return propertiesValuesRankedMap;
+    }
+
+    public static Map<String, Double> rule1SemanticSubjectProperties(FactCheckResource subject, FactCheckResource object, Property predicate) throws JWNLException, IOException {
+        String objectLabel = object.langLabelsMap.get("en");
+        String predicateLabel = predicate.getLocalName();
+        String subjectLabel = subject.langLabelsMap.get("en");
+
+        /* Get best synonyms for property (predicate) label */
+        List<String> predicateSynonyms = new ArrayList<>();
+        predicateSynonyms = WordNet.getNTopSynonyms(predicateLabel, 5);
+        Map<String, Double> synonymsWeight = new HashMap<>();
+        for (String syn : predicateSynonyms) {
+            double totalWeight = Similarity.getSemanticSimilarity(objectLabel, syn, predicateLabel);
+            synonymsWeight.put(syn, totalWeight);
+        }
+        String query = String.format(Queries.ALL_PREDICATES_OF_SUBJECT, "<" + FactCheckResource.getDBpediaUri(subject) + ">");
+        List<String> results = Queries.execute(query, "predicate");
+        Map<String, Double> propertySimilarityMap = new HashMap<String, Double>();
+        for (String property : results) {
+            int index = property.lastIndexOf('/') + 1;
+            property = property.substring(index, property.length());
+            property = property.replaceAll("\\d+", "").replaceAll("(.)([A-Z])", "$1 $2");
+            if (property.contains("#") || property.equals(predicateLabel))
+                continue;
+
+            double propertySynonymScore = 0;
+            double propertyPredicateScore = (Similarity.getSemanticSimilarity(objectLabel, property, predicateLabel)
+                    + Similarity.getSemanticSimilarity(subjectLabel, property, predicateLabel)) / 2;
+
+            for (String synonym : predicateSynonyms) {
+                propertySynonymScore = propertySynonymScore
+                        + ((Similarity.getSemanticSimilarity(objectLabel, property, synonym)
+                            + Similarity.getSemanticSimilarity(subjectLabel, property, synonym)) / 2) * synonymsWeight.get(synonym);
+            }
+            double similarityScore = (propertyPredicateScore + (propertySynonymScore / predicateSynonyms.size())) / 2;
+
+            if (similarityScore == 0 || Double.isNaN(similarityScore))
+                continue;
+            propertySimilarityMap.put(property, similarityScore);
+        }
+        return Util.sortMapByValue(propertySimilarityMap);
+    }
+
+    public static Map<String, Integer> rule2RankedPropertiesOfAllSubjSameObj(String subjectUri, String predicateUri, String objectUri) {
+        String query = Queries.getQueryRankedPropertiesHiddenSubject(predicateUri, objectUri, subjectUri);
+        return Queries.execFreq(query, QUERY_VAR_PREDICATE);
+    }
+
+    public static Map<String, Integer> rule2_1PropertyValuesRanked(String subjectUri, String predicateUri, String objectUri, String propertyUri) {
+        String query = Queries.getQueryRankedPropertyValues(subjectUri, propertyUri, predicateUri, objectUri);
+        return Queries.execFreq(query, QUERY_VAR_OBJECT);
+    }
+
+    public static Map<String, Integer> rule3RankedPropertiesOfAllObjSameSubj(String subjectUri, String predicateUri, String objectUri) {
+        String query = Queries.getQueryRankedPropertiesHiddenObject(subjectUri, predicateUri, objectUri);
+        return Queries.execFreq(query, QUERY_VAR_PREDICATE);
+    }
+
+    public static Map<String, Integer> rule4RankedObjOfAllSubjSameProperty(String subjectUri, String predicateUri, String objectUri) {
+        String query = Queries.getQueryRankedObjectHiddenProperties(subjectUri, objectUri, predicateUri);
+        return Queries.execFreq(query, QUERY_VAR_OBJECT);
+    }
+
+    public static TripleExtractor getTriples(String fileName) throws FileNotFoundException {
+        Model model = ModelFactory.createDefaultModel();
+        model.read(new FileInputStream(fileName), null, "TTL");
+
+        TripleExtractor tripleExtractor = new TripleExtractor(model);
+        tripleExtractor.parseStatements();
+
+        return tripleExtractor;
     }
 }

@@ -67,6 +67,13 @@
             <version>7.2.1</version>
         </dependency>
 
+        <!-- Database connection -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>6.0.6</version>
+        </dependency>
+
     </dependencies>
 
 </project>

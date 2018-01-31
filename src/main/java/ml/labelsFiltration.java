@@ -3,6 +3,7 @@ package ml;
 import config.Config;
 import context.Similarity;
 import rdf.FactCheckResource;
+import utils.Util;
 
 import java.io.IOException;
 import java.util.*;
@@ -29,9 +30,9 @@ public class labelsFiltration {
         wordSimilarityMap = new HashMap<String, Double>();
 
         getWordSimilarityScore(altLabels);
-        Map<String, Double> sortedWordSimilarity = sortMapSimilarity(wordSimilarityMap);
+        Map<String, Double> sortedWordSimilarity = Util.sortMapByValue(wordSimilarityMap);
 
-        int mostDiffWordsCount = (int) Math.sqrt(wordSimilarityMap.size()) + 1;
+        int mostDiffWordsCount = (int) Math.sqrt(wordSimilarityMap.size());
         int mostRelevantWordsCount = (int) Math.sqrt(mostDiffWordsCount);
 
         getNWordVariants(mostDiffWordsCount, mostRelevantWordsCount, sortedWordSimilarity);
@@ -45,13 +46,6 @@ public class labelsFiltration {
                 continue;
             wordSimilarityMap.put(similarity.string2, (similarity.cosineSimilarity() + similarity.jaccardSimilarity()));
         }
-    }
-
-    public static Map<String, Double> sortMapSimilarity(Map<String, Double> wordSimilarityMap) {
-        return wordSimilarityMap.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
     public static void getNWordVariants(int mostDiffWordsCount, int mostRelevantWordsCount, Map<String, Double> sortedWordSimilarity) {

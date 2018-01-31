@@ -108,3 +108,18 @@ GROUP BY ?o ?freq
 ORDER BY DESC(?freq)
 
 ****************************************************************************************************************************
+
+
+# Granular property freq count comparision with respect to diff subjects of same category
+# Query 1 extension
+SELECT ?o count(?o) as ?freq WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        } .
+        FILTER (?p = <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> && ?o = ?obj) {
+            SELECT ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?obj }
+        }
+    }
+group by ?o
+order by desc(?freq)
