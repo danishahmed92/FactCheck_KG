@@ -12,8 +12,8 @@ public class Queries {
     public static final String ALL_PREDICATES_OF_SUBJECT = "SELECT DISTINCT ?predicate WHERE { " +
             " %s ?predicate [] " +
             "}";
-    public static final String PREDICATE_OBJECT_FIXED = "SELECT DISTINCT ?subject WHERE { " +
-            " ?subject  %s %s " +
+    public static final String CHECK_RESOURCE_AVAILABILITY = "SELECT ?o WHERE { " +
+            " %s %s ?o " +
             "}";
 
     public static final String GET_RANKED_PROPERTIES_HIDDEN_SUBJECT = "" +
@@ -82,6 +82,10 @@ public class Queries {
             "    }\n" +
             "GROUP BY ?o\n" +
             "ORDER BY DESC(?freq)";
+
+    public static String getQueryCheckResourceAvailability(String subjectUri, String predicateUri) {
+        return String.format(Queries.CHECK_RESOURCE_AVAILABILITY, subjectUri, predicateUri);
+    }
 
     public static String getQueryRankedPropertiesHiddenSubject(String predicateUri, String objectUri, String subjectUri) {
         return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_SUBJECT,

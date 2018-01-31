@@ -1,5 +1,6 @@
 package ml;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import config.Config;
 import config.Database;
 import context.Similarity;
@@ -16,8 +17,11 @@ import utils.Util;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /*
  * Step 1:
@@ -59,46 +63,55 @@ public class RulesExtraction {
     public static final String QUERY_VAR_OBJECT = "o";
     public static final String QUERY_VAR_PREDICATE = "p";
 
+    public static Boolean saveEntryToDB = true;
+    public static Connection conn = Database.databaseInstance.conn;
+
     public static void main(String[] args) {
         try {
-            ExtractedFeatures extractedFeatures = extractRulesForRDFFile("Einsteini.ttl");
-
-            /* DB try object save */
-            String writeQuery = "INSERT INTO award(extracted_feature_obj) VALUES (?)";
-            try {
-                Connection conn = Database.databaseInstance.conn;
-                PreparedStatement prepareStatement = conn.prepareStatement(writeQuery);
-                // set input parameters
-                prepareStatement.setObject(1, extractedFeatures);
-                prepareStatement.executeUpdate();
-                // get the generated key for the id
-                ResultSet rs = prepareStatement.getGeneratedKeys();
-                int id = -1;
-                if (rs.next()) {
-                    id = rs.getInt(1);
-                }
-
-                rs.close();
-                prepareStatement.close();
-                System.out.println("writeJavaObject: done serializing (id): " + id);
-
-            } catch (SQLException ex) {
-                System.out.println(ex.getMessage());
-                ex.printStackTrace();
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            filesCrawler(Paths.get(Config.configInstance.trainDataPath + "/correct/award"));
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (JWNLException e) {
-            e.printStackTrace();
+        }
+    }
+
+
+    public static void filesCrawler(final Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    System.out.println(file.getFileName().toString());
+                    try {
+                        saveEntryToDB = true;
+                        ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + file.getFileName().toString());
+                        TimeUnit.SECONDS.sleep(1);
+                        if (extractedFeatures != null)
+                            Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", file.getFileName().toString());
+                    } catch (IOException ignore) {
+                        // don't index files that can't be read.
+                    } catch (JWNLException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } else {
+            System.out.println(path.getFileName().toString());
+            try {
+                ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + path.getFileName().toString());
+                if (extractedFeatures != null)
+                    Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", path.getFileName().toString());
+            } catch (JWNLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public static ExtractedFeatures extractRulesForRDFFile(String fileName) throws IOException, JWNLException {
         /* Step 1 */
-        TripleExtractor tripleExtractor = getTriples("Einstein.ttl");
+        TripleExtractor tripleExtractor = getTriples(fileName);
         FactCheckResource subject = tripleExtractor.subject;
         Property predicate = tripleExtractor.predicate;
         FactCheckResource object = tripleExtractor.object;
@@ -112,26 +125,40 @@ public class RulesExtraction {
 
         /* Step 3 (RULE #1) */
         Map<String, Double> semanticSubjectPropertiesMap = rule1SemanticSubjectProperties(subject, object, predicate);
-        extractedFeatures.setSemanticSubjectProperty(semanticSubjectPropertiesMap.keySet().toArray()[semanticSubjectPropertiesMap.size()-1].toString(),
-                Double.parseDouble(semanticSubjectPropertiesMap.values().toArray()[semanticSubjectPropertiesMap.size()-1].toString()));
+        /* if provided resource has properties in sparql */
+        if (semanticSubjectPropertiesMap.size() != 0) {
+            extractedFeatures.setSemanticSubjectProperty(semanticSubjectPropertiesMap.keySet().toArray()[semanticSubjectPropertiesMap.size() - 1].toString(),
+                    Double.parseDouble(semanticSubjectPropertiesMap.values().toArray()[semanticSubjectPropertiesMap.size() - 1].toString()));
 
-        int threshold = 0;
+            List<String> resourceAvailability = checkResourceAvailability(subjectUri, predicateUri);
+            if (resourceAvailability.size() != 0) {
+                /* Step 4 (RULE #2)*/
+                Map<String, Integer> propertiesOfAllSubjSameObjMap = rule2RankedPropertiesOfAllSubjSameObj(subjectUri, predicateUri, objectUri);
+                extractedFeatures.setPropertiesOfAllSubjSameObjMap(propertiesOfAllSubjSameObjMap);
+                /* (RULE #2.1)*/
+                extractedFeatures.setPropertiesValuesRankedMap(extractPropertyValuesFromTriple(propertiesOfAllSubjSameObjMap, subjectUri, predicateUri, objectUri));
 
-        /* Step 4 (RULE #2)*/
-        Map<String, Integer> propertiesOfAllSubjSameObjMap = rule2RankedPropertiesOfAllSubjSameObj(subjectUri, predicateUri, objectUri);
-        extractedFeatures.setPropertiesOfAllSubjSameObjMap(propertiesOfAllSubjSameObjMap);
-        /* (RULE #2.1)*/
-        extractedFeatures.setPropertiesValuesRankedMap(extractPropertyValuesFromTriple(propertiesOfAllSubjSameObjMap, subjectUri, predicateUri, objectUri));
+                /* Step 5 (RULE #3)*/
+                Map<String, Integer> propertiesOfAllObjSameSubjMap = rule3RankedPropertiesOfAllObjSameSubj(subjectUri, predicateUri, objectUri);
+                extractedFeatures.setPropertiesOfAllObjSameSubjMap(propertiesOfAllObjSameSubjMap);
 
-        /* Step 5 (RULE #3)*/
-        Map<String, Integer> propertiesOfAllObjSameSubjMap = rule3RankedPropertiesOfAllObjSameSubj(subjectUri, predicateUri, objectUri);
-        extractedFeatures.setPropertiesOfAllObjSameSubjMap(propertiesOfAllObjSameSubjMap);
+                /* Step 6 (RULE #4)*/
+                Map<String, Integer> objOfAllSubjSamePropertyMap = rule4RankedObjOfAllSubjSameProperty(subjectUri, predicateUri, objectUri);
+                extractedFeatures.setObjOfAllSubjSamePropertyMap(objOfAllSubjSamePropertyMap);
 
-        /* Step 6 (RULE #4)*/
-        Map<String, Integer> objOfAllSubjSamePropertyMap = rule4RankedObjOfAllSubjSameProperty(subjectUri, predicateUri, objectUri);
-        extractedFeatures.setObjOfAllSubjSamePropertyMap(objOfAllSubjSamePropertyMap);
-
-        return  extractedFeatures;
+                System.out.println();
+                return extractedFeatures;
+            } else {
+                saveEntryToDB = false;
+                System.out.println("Resource unavailable w.r.t object in Dbpedia sparql: " + subjectUri + ",\t" + predicateUri);
+                System.out.println();
+            }
+        } else {
+            saveEntryToDB = false;
+            System.out.println("Resource unavailable in Dbpedia sparql: " + subjectUri);
+            System.out.println();
+        }
+        return null;
     }
 
     public static Map<String, Map<String, Integer>> extractPropertyValuesFromTriple(Map<String, Integer> propertiesOfAllSubjSameObjMap, String subjectUri, String predicateUri, String objectUri) {
@@ -141,6 +168,11 @@ public class RulesExtraction {
         for (int i = 0; i < threshold; i++) {
             String propertyUri = String.format("<%s>", propertyArray[i].toString());
             Map <String, Integer> propertyValuesMap = rule2_1PropertyValuesRanked(subjectUri, predicateUri, objectUri, propertyUri);
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             Map <String, Integer> reducedPropertyValuesMap = new LinkedHashMap<>();
             if (propertiesValuesRankedMap.get(propertyArray[i].toString()) != null)
@@ -184,6 +216,7 @@ public class RulesExtraction {
         }
         String query = String.format(Queries.ALL_PREDICATES_OF_SUBJECT, "<" + FactCheckResource.getDBpediaUri(subject) + ">");
         List<String> results = Queries.execute(query, "predicate");
+        System.out.println(results);
         Map<String, Double> propertySimilarityMap = new HashMap<String, Double>();
         for (String property : results) {
             int index = property.lastIndexOf('/') + 1;
@@ -208,6 +241,11 @@ public class RulesExtraction {
             propertySimilarityMap.put(property, similarityScore);
         }
         return Util.sortMapByValue(propertySimilarityMap);
+    }
+
+    public static List<String> checkResourceAvailability (String subjectUri, String predicateUri) {
+        String query = Queries.getQueryCheckResourceAvailability(subjectUri, predicateUri);
+        return Queries.execute(query, QUERY_VAR_OBJECT);
     }
 
     public static Map<String, Integer> rule2RankedPropertiesOfAllSubjSameObj(String subjectUri, String predicateUri, String objectUri) {

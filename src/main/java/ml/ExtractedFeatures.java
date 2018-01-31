@@ -4,10 +4,11 @@ import org.apache.jena.rdf.model.Property;
 import rdf.FactCheckResource;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-public class ExtractedFeatures {
+public class ExtractedFeatures implements Serializable {
     public static String subjectUri;
     public static String predicateUri;
     public static String objectUri;

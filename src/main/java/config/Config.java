@@ -33,8 +33,8 @@ public class Config {
     public String dbUser;
     public String dbPassword;
 
-    private String trainDataPath;
-    private String testDataPath;
+    public String trainDataPath;
+    public String testDataPath;
 
     public Config() throws IOException {
         configIni = new Ini(new File(Constants.RESOURCE_DIRECTORY + Constants.CONFIG_FILE));
