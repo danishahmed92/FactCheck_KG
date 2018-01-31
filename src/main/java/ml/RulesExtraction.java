@@ -85,7 +85,7 @@ public class RulesExtraction {
                         saveEntryToDB = true;
                         ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + file.getFileName().toString());
                         TimeUnit.SECONDS.sleep(1);
-                        if (extractedFeatures != null)
+                        if (saveEntryToDB)
                             Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", file.getFileName().toString());
                     } catch (IOException ignore) {
                         // don't index files that can't be read.
@@ -101,7 +101,7 @@ public class RulesExtraction {
             System.out.println(path.getFileName().toString());
             try {
                 ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + path.getFileName().toString());
-                if (extractedFeatures != null)
+                if (saveEntryToDB)
                     Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", path.getFileName().toString());
             } catch (JWNLException e) {
                 e.printStackTrace();
