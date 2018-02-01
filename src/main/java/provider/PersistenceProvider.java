@@ -176,7 +176,7 @@ public class PersistenceProvider {
 	public static KgRule fetchRule(String pred, String propVal, Map<String, List<KgRule>> predRuleMap) {
 		KgRule rule = null;
 		for (KgRule entry : predRuleMap.get(pred)) {
-			if (entry.getRlPropval().equals(propVal))
+			if (fetchPropLabel(entry.getRlPropval()).equals(fetchPropLabel(propVal)))
 				return entry;
 		}
 		return rule;
@@ -200,7 +200,7 @@ public class PersistenceProvider {
 	 * @return - last element of the URI
 	 */
 	public static String fetchPropLabel(String propVal) {
-		String[] words = propVal.split("[\\/\\]");
+		String[] words = propVal.split("[\\/]");
 		return words[words.length - 1];
 	}
 

@@ -26,6 +26,7 @@ import config.Config;
 import config.Database;
 import context.Similarity;
 import context.WordNet;
+import provider.PersistenceProvider;
 import rdf.FactCheckResource;
 import rdf.Queries;
 import rdf.TripleExtractor;
@@ -161,13 +162,19 @@ public class RulesExtraction {
                 /* Step 4 (RULE #1)*/
 
                 Map<String, Integer> subjectsPropertiesMap = rule1SubjectsPropertiesIntersection(predicateUri, objectUri);
+                String[] arrRule1 = {"U", predicate.getURI(), FactCheckResource.getDBpediaUri(object)};
+                String[] arrRule2 = {FactCheckResource.getDBpediaUri(subject), predicate.getURI(), "U"};
+//                String[] arrRule1 = {"U", predicate.getURI(), FactCheckResource.getDBpediaUri(object)};
                 if (!queryCache.containsKey(currentQuery)) {
                     extractedFeatures.setRule1SubjectsPropertiesMap(subjectsPropertiesMap);
                     Map<String, Map<String, Integer>> subjectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_1, subjectsPropertiesMap, predicateUri, objectUri);
                     queryCache.put(currentQuery, subjectsPropertiesValuesMap);
                     extractedFeatures.setRule1PropertiesValuesMap(subjectsPropertiesValuesMap);
+
+                    PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, subjectsPropertiesValuesMap);
                 } else {
                     extractedFeatures.setRule1PropertiesValuesMap(queryCache.get(currentQuery));
+                    PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, queryCache.get(currentQuery));
                 }
 
                 /* Step 5 (RULE #2)*/
@@ -177,8 +184,12 @@ public class RulesExtraction {
                     Map<String, Map<String, Integer>> objectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_2, subjectsPropertiesMap, predicateUri, objectUri);
                     queryCache.put(currentQuery, objectsPropertiesValuesMap);
                     extractedFeatures.setRule2PropertiesValuesMap(objectsPropertiesValuesMap);
+
+                    PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, objectsPropertiesValuesMap);
                 } else {
                     extractedFeatures.setRule2PropertiesValuesMap(queryCache.get(currentQuery));
+
+                    PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, queryCache.get(currentQuery));
                 }
 
                 /*Map<String, Integer> propertiesRankedMap = rule3PropertiesRanked(predicateUri);
