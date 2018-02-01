@@ -23,9 +23,12 @@ public class ExtractedFeatures implements Serializable {
     public String semanticSubjectProperty;
     public double semanticSubjectPropertyWeight;
 
-    public Map<String, Integer> propertiesOfAllSubjSameObjMap;
-    public Map<String, Map<String, Integer>> propertiesValuesRankedMap;
-    public Map<String,Integer> propertiesOfAllObjSameSubjMap;
+    public Map<String, Integer> rule1SubjectsPropertiesMap;
+    public Map<String, Map<String, Integer>> rule1PropertiesValuesMap;
+
+    public Map<String, Integer> rule2ObjectsPropertiesMap;
+    public Map<String, Map<String, Integer>> rule2PropertiesValuesMap;
+
     public Map<String,Integer> objOfAllSubjSamePropertyMap;
 
     public ExtractedFeatures(FactCheckResource subject, Property predicate, FactCheckResource object) throws IOException {
@@ -46,16 +49,20 @@ public class ExtractedFeatures implements Serializable {
         semanticSubjectPropertyWeight = score;
     }
 
-    public void setPropertiesOfAllSubjSameObjMap (Map<String, Integer> propertyMap) {
-        propertiesOfAllSubjSameObjMap = propertyMap;
+    public void setRule1SubjectsPropertiesMap (Map<String, Integer> propertyMap) {
+        rule1SubjectsPropertiesMap = propertyMap;
     }
 
-    public void setPropertiesValuesRankedMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
-        propertiesValuesRankedMap = propertiesValuesMap;
+    public void setRule1PropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
+        rule1PropertiesValuesMap = propertiesValuesMap;
     }
 
-    public void setPropertiesOfAllObjSameSubjMap (Map<String, Integer> propertyMap) {
-        propertiesOfAllObjSameSubjMap = propertyMap;
+    public void setRule2PropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
+        rule2PropertiesValuesMap = propertiesValuesMap;
+    }
+
+    public void setRule2ObjectsPropertiesMap (Map<String, Integer> propertyMap) {
+        rule2ObjectsPropertiesMap = propertyMap;
     }
 
     public void setObjOfAllSubjSamePropertyMap (Map<String, Integer> objectMap) {

@@ -1,20 +1,6 @@
 # ?s p o
 #All subjects, predicate and objects fixed w.r.t input subject
 #get properties and count having same values in all subjects
-SELECT ?p ?freq WHERE {
-    {SELECT ?s ?p count(?o) as ?freq WHERE { 
-        ?s ?p ?o .
-        FILTER (?s = ?sub) {
-            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
-        } .
-        FILTER (?p = ?pred && ?o = ?obj) {
-            SELECT ?pred ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> ?pred ?obj }
-        }
-    }}
-    FILTER (?s = <http://dbpedia.org/resource/Albert_Einstein>)
-} order by desc(?freq)
-
---------------------------------------------------
 
 SELECT ?p ?freq WHERE {
     {SELECT ?s ?p (COUNT(?o) AS ?freq) WHERE { 
@@ -32,24 +18,33 @@ SELECT ?p ?freq WHERE {
 GROUP BY ?p ?freq
 ORDER BY DESC(?freq)
 
+REVISED RULE 1 (SUBJECT PROPERTIES INTERSECTION):
+
+SELECT distinct ?p ?freq WHERE {
+    {SELECT distinct ?p (count(?o) as ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        } .
+    } group by ?p }
+} 
+group by ?p
+order by desc(?freq)
+
+# Granular property freq count comparision with respect to diff subjects of same category
+# Query 1 extension
+SELECT ?o (count(?o) as ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        } .
+        FILTER (?p = <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>)
+    }
+group by ?o
+order by desc(?freq)
+
 *****************************************************************************************************************************************
 
-
-# s p ?o
-SELECT ?p ?freq WHERE {
-    {SELECT ?o ?p count(?s) as ?freq WHERE { 
-        ?s ?p ?o .
-        FILTER (?o = ?obj) {
-            SELECT ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://dbpedia.org/ontology/award> ?obj }
-        } .
-        FILTER (?p = ?pred && ?s = ?sub) {
-            SELECT ?sub ?pred WHERE { ?sub ?pred <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
-        }
-    }}
-    FILTER (?o = <http://dbpedia.org/resource/Nobel_Prize_in_Physics>)
-} order by desc(?freq)
-
-----------------------------------------------------------------
 
 SELECT ?p ?freq WHERE {
     {SELECT ?o ?p (COUNT(?s) AS ?freq) WHERE { 
@@ -66,6 +61,34 @@ SELECT ?p ?freq WHERE {
 }
 GROUP BY ?p ?freq
 ORDER BY DESC(?freq)
+
+RULE 2 REVISED (OBJECT PROPERTIES INTERSECTION):
+
+SELECT distinct ?p ?freq WHERE {
+    {SELECT distinct ?p (count(?s) as ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?obj) {
+            SELECT ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://dbpedia.org/ontology/award> ?obj }
+        } .
+    } group by ?p }
+} 
+group by ?p ?freq
+order by desc(?freq)
+
+# Granular property freq count comparision with respect to diff objects of same category
+# Query 2 extension
+SELECT ?o (count(?o) as ?freq) WHERE {
+?subj <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?o .
+filter (?subj = ?obj) {
+SELECT ?obj WHERE { 
+        ?s <http://dbpedia.org/ontology/award> ?obj .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        }
+    }
+}
+} group by ?o
+order by desc(?freq)
 
 ********************************************************************************************************************
 
@@ -110,16 +133,36 @@ ORDER BY DESC(?freq)
 ****************************************************************************************************************************
 
 
-# Granular property freq count comparision with respect to diff subjects of same category
-# Query 1 extension
-SELECT ?o count(?o) as ?freq WHERE { 
+
+
+
+******************************************************************************************************************************
+
+get intersection of properties of different object sharing same subject and subject's predicate
+
+SELECT distinct ?p ?freq WHERE {
+    {SELECT distinct ?p count(?s) as ?freq WHERE { 
         ?s ?p ?o .
-        FILTER (?s = ?sub) {
-            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }
+        FILTER (?s = ?obj) {
+            SELECT ?obj WHERE { dbr:Donald_Trump dbo:spouse ?obj }
         } .
-        FILTER (?p = <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> && ?o = ?obj) {
-            SELECT ?obj WHERE { <http://dbpedia.org/resource/Albert_Einstein> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?obj }
-        }
-    }
-group by ?o
+    }}
+} 
+group by ?p
+order by desc(?freq)
+
+*****************************************************************************************************************************
+
+give me all the properties of all the subjects that are in common, given that subject are retrieved by input predicate
+x spouse y. Give all ?p count of X that are common. where x is an element of X.
+
+SELECT distinct ?p ?freq WHERE {
+    {SELECT distinct ?p count(?s) as ?freq WHERE { 
+        ?s ?p ?o .
+        FILTER (?o = ?sub) {
+            SELECT ?sub WHERE { ?sub dbo:award ?obj }
+        } .
+    }}
+} 
+group by ?p
 order by desc(?freq)
