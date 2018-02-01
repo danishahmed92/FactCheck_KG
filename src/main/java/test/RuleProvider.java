@@ -49,14 +49,14 @@ public class RuleProvider {
 	}
 
 	// Method to run the query1 and query2 for a particular pattern and resource URI
-	public static List<TestRule> fetchRuleData(String[] params, Session session) {
+	public static List<TestRule> fetchRuleData(String resURI, String[] params, Session session) {
 		List<TestRule> testRules  = new ArrayList<>();
 		List<Object[]> dbRules = new ArrayList<>();
 		dbRules.addAll(executeQuery(query1.toString(), params, session));
 		dbRules.addAll(executeQuery(query2.toString(), params, session));
 		TestRule tempRule;
 		for(Object[] entry : dbRules) {
-			tempRule = new TestRule(params[0], entry[0].toString(), entry[1].toString(), Double.parseDouble(entry[2].toString()));
+			tempRule = new TestRule(resURI, entry[0].toString(), entry[1].toString(), Double.parseDouble(entry[2].toString()));
 			testRules.add(tempRule);
 		}
 		return testRules;
