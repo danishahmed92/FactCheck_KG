@@ -5,6 +5,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Util {
+    /**
+     *
+     * @param wordSimilarityMap
+     * @return sorted map
+     */
     public static Map<String, Double> sortMapByValue(Map<String, Double> wordSimilarityMap) {
         return wordSimilarityMap.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue())

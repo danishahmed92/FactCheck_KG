@@ -41,6 +41,10 @@ public class TripleExtractor {
         }
     }
 
+    /**
+     * retrieve subject node
+     * @param subjectNode subject initial node
+     */
     private void getSubject(Resource subjectNode) {
         StmtIterator stmtIterator = this.model.listStatements();
         while (stmtIterator.hasNext()) {
@@ -54,6 +58,10 @@ public class TripleExtractor {
         }
     }
 
+    /**
+     * retrieve object node
+     * @param statement node statement
+     */
     private RDFNode getObject(Statement statement, RDFNode objectNode) {
         if (objectNode.isLiteral()) {
             this.object = new FactCheckResource(statement.getSubject().asResource(), this.model);

@@ -20,6 +20,13 @@ public class Similarity {
     private Jaccard jaccard;
     private NGram nGram;
 
+    /**
+     *
+     * @param string1 compare string
+     * @param string2 compare string with
+     * @param applyStringFilters apply filtration or keep strings same and find similarity?
+     * @throws IOException
+     */
     public Similarity(String string1, String string2, Boolean applyStringFilters) throws IOException {
         init();
 
@@ -31,6 +38,10 @@ public class Similarity {
             applyStringFilters();
     }
 
+    /**
+     * which filters to apply
+     * @throws IOException
+     */
     public void applyStringFilters() throws IOException {
 //        to lower case
         this.string1 = StringFilters.toLower(this.string1);
@@ -50,18 +61,38 @@ public class Similarity {
         nGram = new NGram();
     }
 
+    /**
+     * cosine string similarity
+     * @return double score
+     */
     public double cosineSimilarity() {
         return this.cosine.similarity(this.string1, this.string2);
     }
 
+    /**
+     * jaccard string similarity
+     * @return double score
+     */
     public double jaccardSimilarity() {
         return this.jaccard.similarity(this.string1, this.string2);
     }
 
+    /**
+     * nGram string similarity
+     * Default value of n = 2
+     * @return double score
+     */
     public double nGramSimilarity() {
         return this.nGram.similarity(this.string1, this.string2);
     }
 
+    /**
+     * Given string definition (in from of Set),
+     * find Jaccard similarity
+     * @param stringSet1 definition set of string 1
+     * @param stringSet2 definition set of string 2
+     * @return double score
+     */
     public static double jaccardSimilarity(Set<String> stringSet1, Set<String> stringSet2) {
         Set<String> intersection = new HashSet<>(stringSet1);
         Set<String> union = new HashSet<>(stringSet1);
@@ -72,6 +103,12 @@ public class Similarity {
         return (double) intersection.size() / union.size();
     }
 
+    /**
+     * find def of 2 words and get similarity between them based on jaccard
+     * @param word1 word 1
+     * @param word2 word 2
+     * @return similarity score
+     */
     public static double getDefBasedSimilarity(String word1, String word2) {
         word1 = word1.toLowerCase();
         word2 = word2.toLowerCase();

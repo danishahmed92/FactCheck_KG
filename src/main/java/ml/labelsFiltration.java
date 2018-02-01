@@ -39,6 +39,10 @@ public class labelsFiltration {
         return similarWords;
     }
 
+    /**
+     * @param altLabels given alt label, convert to set. And compare similarity with actual label
+     * @throws IOException
+     */
     public static void getWordSimilarityScore(Set<String> altLabels) throws IOException {
         for (String altLabel : altLabels) {
             Similarity similarity = new Similarity(mainLabel, altLabel, true);
@@ -48,6 +52,12 @@ public class labelsFiltration {
         }
     }
 
+    /**
+     * set list of similar words that are authentic according to label
+     * @param mostDiffWordsCount most different words to consider after sqrt
+     * @param mostRelevantWordsCount most similar words to consider after sqrt
+     * @param sortedWordSimilarity same list passed sorted
+     */
     public static void getNWordVariants(int mostDiffWordsCount, int mostRelevantWordsCount, Map<String, Double> sortedWordSimilarity) {
         int counter = 0;
         for (String label : sortedWordSimilarity.keySet()) {

@@ -36,6 +36,11 @@ public class Config {
     public String trainDataPath;
     public String testDataPath;
 
+    /**
+     * reading configuration from factcheck.ini
+     * and set variables that are gloably required
+     * @throws IOException
+     */
     public Config() throws IOException {
         configIni = new Ini(new File(Constants.RESOURCE_DIRECTORY + Constants.CONFIG_FILE));
 
@@ -51,6 +56,10 @@ public class Config {
         dbPassword = configIni.get("mysql", "dbPassword");
     }
 
+    /**
+     * load stopwords from fileName mentioned in config ini
+     * @throws IOException
+     */
     public void loadStopWords() throws IOException {
         BufferedReader in = new BufferedReader(new FileReader(stopWordsFile));
         String word;

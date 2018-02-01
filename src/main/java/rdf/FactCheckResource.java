@@ -30,6 +30,11 @@ public class FactCheckResource {
 
     public List<Resource> owlSameAsList = new ArrayList<Resource>();     // currently only for en lang
 
+    /**
+     * give me FactCheck resource model
+     * @param resource given jena resource
+     * @param model jena model
+     */
     FactCheckResource(Resource resource, Model model) {
         this.resource = resource;
         this.uri =resource.getURI();
@@ -47,6 +52,11 @@ public class FactCheckResource {
         setOwlSameAsList();
     }
 
+    /**
+     *
+     * @param nodeIterator go through all jena nodes that you got from rdf
+     * @param type which property you need to extract?
+     */
     private void setLabelsMap(NodeIterator nodeIterator, NodeIteratorType type) {
         while (nodeIterator.hasNext()) {
             RDFNode rdfNode = nodeIterator.nextNode();
@@ -71,6 +81,9 @@ public class FactCheckResource {
         }
     }
 
+    /**
+     * get sameAs owl property
+     */
     private void setOwlSameAsList() {
         NodeIterator nodeIterator = model.listObjectsOfProperty(this.resource, this.owlSameAsProperty);
         while (nodeIterator.hasNext()) {
@@ -82,6 +95,11 @@ public class FactCheckResource {
         }
     }
 
+    /**
+     * filter out only dbpedia resource as sparql doesn't work on freebase
+     * @param resource FactCheck resource
+     * @return uri of resource
+     */
     public static String getDBpediaUri(FactCheckResource resource) {
         String uri = resource.uri;
         if (uri.contains(Constants.DBPEDIA_URI))
