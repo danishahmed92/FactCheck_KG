@@ -65,6 +65,30 @@ public class Queries {
             "} group by ?o\n" +
             "order by desc(?freq)";
 
+    public static final String RULE_3 = "" +
+            "SELECT distinct ?p ?freq WHERE {\n" +
+            "    {SELECT distinct ?p (count(?o) as ?freq) WHERE { \n" +
+            "        ?s ?p ?o .\n" +
+            "        FILTER (?s = ?sub) {\n" +
+            "            SELECT ?sub WHERE { ?sub %s ?obj }\n" +
+            "        } .\n" +
+            "    } group by ?p }\n" +
+            "} \n" +
+            "group by ?p ?freq\n" +
+            "order by desc(?freq)\n" +
+            "limit 3";
+
+    public static final String RULE_3_GRANULAR = "" +
+            "SELECT ?o (count(?o) as ?freq) WHERE { \n" +
+            "        ?s ?p ?o .\n" +
+            "        FILTER (?s = ?sub) {\n" +
+            "            SELECT ?sub WHERE { ?sub %s ?obj }\n" +
+            "        } .\n" +
+            "        FILTER (?p = %s)\n" +
+            "    }\n" +
+            "group by ?o\n" +
+            "order by desc(?freq)";
+
     public static final String GET_RANKED_PROPERTIES_HIDDEN_SUBJECT = "" +
             "SELECT ?p ?freq WHERE {\n" +
             "    {SELECT ?s ?p (COUNT(?o) AS ?freq) WHERE { \n" +
@@ -144,6 +168,14 @@ public class Queries {
 
     public static String getRule2Granular(String propertyUri, String predicateUri, String objectUri) {
         return String.format(RULE_2_GRANULAR, propertyUri, predicateUri, predicateUri, objectUri);
+    }
+
+    public static String getRule3(String predicateUri) {
+        return String.format(RULE_3, predicateUri);
+    }
+
+    public static String getRule3Granular(String predicateUri, String propertyUri) {
+        return String.format(RULE_3_GRANULAR, predicateUri, propertyUri);
     }
 
     public static String getQueryCheckResourceAvailability(String subjectUri, String predicateUri) {

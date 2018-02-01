@@ -29,6 +29,9 @@ public class ExtractedFeatures implements Serializable {
     public Map<String, Integer> rule2ObjectsPropertiesMap;
     public Map<String, Map<String, Integer>> rule2PropertiesValuesMap;
 
+    public Map<String, Integer> rule3PropertiesRankedMap;
+    public Map<String, Map<String, Integer>> rule3PropertiesValuesMap;
+
     public Map<String,Integer> objOfAllSubjSamePropertyMap;
 
     public ExtractedFeatures(FactCheckResource subject, Property predicate, FactCheckResource object) throws IOException {
@@ -63,6 +66,14 @@ public class ExtractedFeatures implements Serializable {
 
     public void setRule2ObjectsPropertiesMap (Map<String, Integer> propertyMap) {
         rule2ObjectsPropertiesMap = propertyMap;
+    }
+
+    public void setRule3PropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
+        rule3PropertiesValuesMap = propertiesValuesMap;
+    }
+
+    public void setRule3PropertiesRankedMap (Map<String, Integer> propertyMap) {
+        rule3PropertiesRankedMap = propertyMap;
     }
 
     public void setObjOfAllSubjSamePropertyMap (Map<String, Integer> objectMap) {

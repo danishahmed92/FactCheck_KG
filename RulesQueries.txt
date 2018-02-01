@@ -92,6 +92,45 @@ order by desc(?freq)
 
 ********************************************************************************************************************
 
+RULE 3:
+#?p ?s ?o
+SELECT distinct ?p ?freq WHERE {
+    {SELECT distinct ?p (count(?o) as ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }
+        } .
+    } group by ?p }
+} 
+group by ?p
+order by desc(?freq)
+
+#Granular level:
+SELECT ?o (count(?o) as ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }
+        } .
+        FILTER (?p = <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>)
+    }
+group by ?o
+order by desc(?freq)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+********************************************************************************************************************
+
 # s ?p o
 SELECT ?o ?freq WHERE {
     {SELECT ?o ?p count(?s) as ?freq WHERE { 
@@ -157,12 +196,12 @@ give me all the properties of all the subjects that are in common, given that su
 x spouse y. Give all ?p count of X that are common. where x is an element of X.
 
 SELECT distinct ?p ?freq WHERE {
-    {SELECT distinct ?p count(?s) as ?freq WHERE { 
+    {SELECT distinct ?p (count(?o) as ?freq) WHERE { 
         ?s ?p ?o .
-        FILTER (?o = ?sub) {
-            SELECT ?sub WHERE { ?sub dbo:award ?obj }
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }
         } .
-    }}
+    } group by ?p }
 } 
 group by ?p
 order by desc(?freq)

@@ -32,6 +32,8 @@ import rdf.TripleExtractor;
 import rita.wordnet.jwnl.JWNLException;
 import utils.Util;
 
+import javax.persistence.criteria.CriteriaBuilder;
+
 /*
  * Step 1:
  * read rdf file and extract triples
@@ -85,6 +87,9 @@ public class RulesExtraction {
 
     public static Boolean saveEntryToDB = true;
     public static Connection conn = Database.databaseInstance.conn;
+
+    public static Map<String, Map<String, Map<String, Integer>>> queryCache = new LinkedHashMap<>();
+    public static String currentQuery = "";
 
     public static void main(String[] args) {
         try {
@@ -154,14 +159,37 @@ public class RulesExtraction {
             List<String> resourceAvailability = checkResourceAvailability(subjectUri, predicateUri);
             if (resourceAvailability.size() != 0) {
                 /* Step 4 (RULE #1)*/
+
                 Map<String, Integer> subjectsPropertiesMap = rule1SubjectsPropertiesIntersection(predicateUri, objectUri);
-                extractedFeatures.setRule1SubjectsPropertiesMap(subjectsPropertiesMap);
-                extractedFeatures.setRule1PropertiesValuesMap(extractPropertyValues(RuleNumber.RULE_1, subjectsPropertiesMap, predicateUri, objectUri));
+                if (!queryCache.containsKey(currentQuery)) {
+                    extractedFeatures.setRule1SubjectsPropertiesMap(subjectsPropertiesMap);
+                    Map<String, Map<String, Integer>> subjectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_1, subjectsPropertiesMap, predicateUri, objectUri);
+                    queryCache.put(currentQuery, subjectsPropertiesValuesMap);
+                    extractedFeatures.setRule1PropertiesValuesMap(subjectsPropertiesValuesMap);
+                } else {
+                    extractedFeatures.setRule1PropertiesValuesMap(queryCache.get(currentQuery));
+                }
 
                 /* Step 5 (RULE #2)*/
                 Map<String, Integer> objectsPropertiesMap = rule2ObjectsPropertiesIntersection(subjectUri, predicateUri);
-                extractedFeatures.setRule2ObjectsPropertiesMap(objectsPropertiesMap);
-                extractedFeatures.setRule2PropertiesValuesMap(extractPropertyValues(RuleNumber.RULE_2, subjectsPropertiesMap, predicateUri, objectUri));
+                if (!queryCache.containsKey(currentQuery)) {
+                    extractedFeatures.setRule2ObjectsPropertiesMap(objectsPropertiesMap);
+                    Map<String, Map<String, Integer>> objectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_2, subjectsPropertiesMap, predicateUri, objectUri);
+                    queryCache.put(currentQuery, objectsPropertiesValuesMap);
+                    extractedFeatures.setRule2PropertiesValuesMap(objectsPropertiesValuesMap);
+                } else {
+                    extractedFeatures.setRule2PropertiesValuesMap(queryCache.get(currentQuery));
+                }
+
+                /*Map<String, Integer> propertiesRankedMap = rule3PropertiesRanked(predicateUri);
+                if (!queryCache.containsKey(currentQuery)) {
+                    extractedFeatures.setRule3PropertiesRankedMap(propertiesRankedMap);
+                    Map<String, Map<String, Integer>> propertiesValuesMap = extractPropertyValues(RuleNumber.RULE_3, subjectsPropertiesMap, predicateUri, objectUri);
+                    queryCache.put(currentQuery, propertiesValuesMap);
+                    extractedFeatures.setRule3PropertiesValuesMap(propertiesValuesMap);
+                } else {
+                    extractedFeatures.setRule3PropertiesValuesMap(queryCache.get(currentQuery));
+                }*/
 
                 /* Step 6 (RULE #4)*/
                 Map<String, Integer> objOfAllSubjSamePropertyMap = rule4RankedObjOfAllSubjSameProperty(subjectUri, predicateUri, objectUri);
@@ -240,6 +268,9 @@ public class RulesExtraction {
                 case RULE_2:
                     propertyValuesMap = rule2_1PropertyValuesFreq(predicateUri, objectUri, propertyUri);
                     break;
+                case RULE_3:
+                    propertyValuesMap = rule3_1PropertyValuesFreq(predicateUri, propertyUri);
+                    break;
             }
 
             try {
@@ -282,6 +313,7 @@ public class RulesExtraction {
 
     public static Map<String, Integer> rule1SubjectsPropertiesIntersection(String predicateUri, String objectUri) {
         String query = Queries.getRule1(predicateUri, objectUri);
+        currentQuery = query;
         return Queries.execFreq(query, QUERY_VAR_PREDICATE);
     }
 
@@ -292,11 +324,23 @@ public class RulesExtraction {
 
     public static Map<String, Integer> rule2ObjectsPropertiesIntersection(String subjectUri, String predicateUri) {
         String query = Queries.getRule2(subjectUri, predicateUri);
+        currentQuery = query;
         return Queries.execFreq(query, QUERY_VAR_PREDICATE);
     }
 
     public static Map<String, Integer> rule2_1PropertyValuesFreq(String predicateUri, String objectUri, String propertyUri) {
         String query = Queries.getRule2Granular(propertyUri, predicateUri, objectUri);
+        return Queries.execFreq(query, QUERY_VAR_OBJECT);
+    }
+
+    public static Map<String, Integer> rule3PropertiesRanked(String predicateUri) {
+        String query = Queries.getRule3(predicateUri);
+        currentQuery = query;
+        return Queries.execFreq(query, QUERY_VAR_PREDICATE);
+    }
+
+    public static Map<String, Integer> rule3_1PropertyValuesFreq(String predicateUri, String propertyUri) {
+        String query = Queries.getRule3Granular(predicateUri, propertyUri);
         return Queries.execFreq(query, QUERY_VAR_OBJECT);
     }
 
