@@ -101,6 +101,11 @@ public class RulesExtraction {
     }
 
 
+    /**
+     *
+     * @param path - path to crawl accross rdf files for training
+     * @throws IOException
+     */
     public static void filesCrawler(final Path path) throws IOException {
         if (Files.isDirectory(path)) {
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
@@ -136,6 +141,13 @@ public class RulesExtraction {
         }
     }
 
+    /**
+     *
+     * @param fileName from given file extract features based on rules
+     * @return
+     * @throws IOException
+     * @throws JWNLException
+     */
     public static ExtractedFeatures extractRulesForRDFFile(String fileName) throws IOException, JWNLException {
         /* Step 1 */
         TripleExtractor tripleExtractor = getTriples(fileName);
@@ -192,7 +204,7 @@ public class RulesExtraction {
                     PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, queryCache.get(currentQuery));
                 }
 
-                /*Map<String, Integer> propertiesRankedMap = rule3PropertiesRanked(predicateUri);
+                Map<String, Integer> propertiesRankedMap = rule3PropertiesRanked(predicateUri);
                 if (!queryCache.containsKey(currentQuery)) {
                     extractedFeatures.setRule3PropertiesRankedMap(propertiesRankedMap);
                     Map<String, Map<String, Integer>> propertiesValuesMap = extractPropertyValues(RuleNumber.RULE_3, subjectsPropertiesMap, predicateUri, objectUri);
@@ -200,11 +212,7 @@ public class RulesExtraction {
                     extractedFeatures.setRule3PropertiesValuesMap(propertiesValuesMap);
                 } else {
                     extractedFeatures.setRule3PropertiesValuesMap(queryCache.get(currentQuery));
-                }*/
-
-                /* Step 6 (RULE #4)*/
-                Map<String, Integer> objOfAllSubjSamePropertyMap = rule4RankedObjOfAllSubjSameProperty(subjectUri, predicateUri, objectUri);
-                extractedFeatures.setObjOfAllSubjSamePropertyMap(objOfAllSubjSamePropertyMap);
+                }
 
                 System.out.println();
                 return extractedFeatures;
@@ -221,6 +229,17 @@ public class RulesExtraction {
         return null;
     }
 
+    /**
+     *
+     * Used for rule 0
+     *
+     * @param subject as resource
+     * @param object as resource
+     * @param predicate as property
+     * @return map of properties along with freq count
+     * @throws JWNLException
+     * @throws IOException
+     */
     public static Map<String, Double> rule0SemanticSubjectProperties(FactCheckResource subject, FactCheckResource object, Property predicate) throws JWNLException, IOException {
         String objectLabel = object.langLabelsMap.get("en");
         String predicateLabel = predicate.getLocalName();
@@ -263,6 +282,14 @@ public class RulesExtraction {
         return Util.sortMapByValue(propertySimilarityMap);
     }
 
+    /**
+     *
+     * @param ruleNumber pass rule number for which you need to get all values of certain properties
+     * @param propertyFreqMap properties that needs to be parsed along with freq
+     * @param predicateUri input predicate
+     * @param objectUri object uri
+     * @return
+     */
     public static Map<String, Map<String, Integer>> extractPropertyValues(RuleNumber ruleNumber, Map<String, Integer> propertyFreqMap, String predicateUri, String objectUri) {
         Object[] propertyArray = propertyFreqMap.keySet().toArray();
 
@@ -317,54 +344,94 @@ public class RulesExtraction {
         return propertiesValuesRankedMap;
     }
 
+    /**
+     * Check if sparql has results for given subject and predicate
+     *
+     * @param subjectUri subject
+     * @param predicateUri object
+     * @return
+     */
     public static List<String> checkResourceAvailability (String subjectUri, String predicateUri) {
         String query = Queries.getQueryCheckResourceAvailability(subjectUri, predicateUri);
         return Queries.execute(query, QUERY_VAR_OBJECT);
     }
 
+    /**
+     * Rule 1: intersection of properties of all subjects that have predicate
+     * @param predicateUri predicate url
+     * @param objectUri object url
+     * @return
+     */
     public static Map<String, Integer> rule1SubjectsPropertiesIntersection(String predicateUri, String objectUri) {
         String query = Queries.getRule1(predicateUri, objectUri);
         currentQuery = query;
         return Queries.execFreq(query, QUERY_VAR_PREDICATE);
     }
 
+    /**
+     * get deeper values of properties extracted from rule 1
+     * @param predicateUri predicate url
+     * @param objectUri obj url
+     * @param propertyUri property url
+     * @return
+     */
     public static Map<String, Integer> rule1_1PropertyValuesFreq(String predicateUri, String objectUri, String propertyUri) {
         String query = Queries.getRule1Granular(predicateUri, objectUri, propertyUri);
         return Queries.execFreq(query, QUERY_VAR_OBJECT);
     }
 
+    /**
+     * Rule 2: intersection of object properties
+     * @param subjectUri
+     * @param predicateUri
+     * @return
+     */
     public static Map<String, Integer> rule2ObjectsPropertiesIntersection(String subjectUri, String predicateUri) {
         String query = Queries.getRule2(subjectUri, predicateUri);
         currentQuery = query;
         return Queries.execFreq(query, QUERY_VAR_PREDICATE);
     }
 
+    /**
+     * get deeper values of properties extracted from rule 2
+     * @param predicateUri predicate url
+     * @param objectUri obj url
+     * @param propertyUri property url
+     * @return
+     */
     public static Map<String, Integer> rule2_1PropertyValuesFreq(String predicateUri, String objectUri, String propertyUri) {
         String query = Queries.getRule2Granular(propertyUri, predicateUri, objectUri);
         return Queries.execFreq(query, QUERY_VAR_OBJECT);
     }
 
+    /**
+     * Rule: ?s p ?o
+     * @param predicateUri predicate url
+     * @return
+     */
     public static Map<String, Integer> rule3PropertiesRanked(String predicateUri) {
         String query = Queries.getRule3(predicateUri);
         currentQuery = query;
         return Queries.execFreq(query, QUERY_VAR_PREDICATE);
     }
 
+    /**
+     * get deeper values of properties extracted from rule 3
+     * @param predicateUri predicate url
+     * @param propertyUri property url
+     * @return
+     */
     public static Map<String, Integer> rule3_1PropertyValuesFreq(String predicateUri, String propertyUri) {
         String query = Queries.getRule3Granular(predicateUri, propertyUri);
         return Queries.execFreq(query, QUERY_VAR_OBJECT);
     }
 
-    public static Map<String, Integer> rule3RankedPropertiesOfAllObjSameSubj(String subjectUri, String predicateUri, String objectUri) {
-        String query = Queries.getQueryRankedPropertiesHiddenObject(subjectUri, predicateUri, objectUri);
-        return Queries.execFreq(query, QUERY_VAR_PREDICATE);
-    }
-
-    public static Map<String, Integer> rule4RankedObjOfAllSubjSameProperty(String subjectUri, String predicateUri, String objectUri) {
-        String query = Queries.getQueryRankedObjectHiddenProperties(subjectUri, objectUri, predicateUri);
-        return Queries.execFreq(query, QUERY_VAR_OBJECT);
-    }
-
+    /**
+     * extraction of rdf files on to triple format
+     * @param fileName rdf file
+     * @return
+     * @throws FileNotFoundException
+     */
     public static TripleExtractor getTriples(String fileName) throws FileNotFoundException {
         Model model = ModelFactory.createDefaultModel();
         model.read(new FileInputStream(fileName), null, "TTL");
