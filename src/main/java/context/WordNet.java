@@ -1,11 +1,11 @@
 package context;
 
 import config.Config;
-import edu.cmu.lti.lexical_db.ILexicalDatabase;
+/*import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.impl.*;
-import edu.cmu.lti.ws4j.util.WS4JConfiguration;
+import edu.cmu.lti.ws4j.util.WS4JConfiguration;*/
 import rita.RiWordNet;
 import rita.wordnet.jwnl.JWNLException;
 import rita.wordnet.jwnl.wndata.IndexWord;
@@ -20,11 +20,11 @@ import java.util.List;
 public class WordNet {
 
     public static RiWordNet wordNet = new RiWordNet(Config.configInstance.wordNetDict);;
-    private static ILexicalDatabase db = new NictWordNet();
+  /*  private static ILexicalDatabase db = new NictWordNet();
     private static RelatednessCalculator[] rcs = {
             new HirstStOnge(db), new LeacockChodorow(db), new Lesk(db),  new WuPalmer(db),
             new Resnik(db), new JiangConrath(db), new Lin(db), new Path(db)
-    };
+    };*/
 
     public static List<String> getNTopSynonyms(String word, int n) throws JWNLException {
         List<String> synonyms = new ArrayList<>();
