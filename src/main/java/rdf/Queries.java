@@ -154,35 +154,78 @@ public class Queries {
             "GROUP BY ?o\n" +
             "ORDER BY DESC(?freq)";
 
+    /**
+     *
+     * @param predicateUri for rule 1
+     * @param objectUri for rule 2
+     * @return query string needed for rule 1
+     */
     public static String getRule1(String predicateUri, String objectUri) {
         return String.format(RULE_1, predicateUri, objectUri);
     }
 
+    /**
+     *
+     * @param predicateUri predicate uri
+     * @param objectUri object uri
+     * @param propertyUri to get value of and get freq
+     * @return query string needed for rule 1
+     */
     public static String getRule1Granular(String predicateUri, String objectUri, String propertyUri) {
         return String.format(RULE_1_GRANULAR, predicateUri, objectUri, propertyUri);
     }
 
+    /**
+     *
+     * @param predicateUri for rule 2
+     * @param subjectUri for rule 2
+     * @return query string needed for rule 2
+     */
     public static String getRule2(String subjectUri, String predicateUri) {
         return String.format(RULE_2, subjectUri, predicateUri);
     }
 
+    /**
+     *
+     * @param predicateUri predicate uri
+     * @param objectUri object uri
+     * @param propertyUri to get value of and get freq
+     * @return query string needed for rule 2
+     */
     public static String getRule2Granular(String propertyUri, String predicateUri, String objectUri) {
         return String.format(RULE_2_GRANULAR, propertyUri, predicateUri, predicateUri, objectUri);
     }
 
+    /**
+     *
+     * @param predicateUri predicate uri
+     * @return query for rule 3
+     */
     public static String getRule3(String predicateUri) {
         return String.format(RULE_3, predicateUri);
     }
 
+    /**
+     *
+     * @param predicateUri predicate uri
+     * @param propertyUri to get value of and get freq
+     * @return query string needed for rule 3
+     */
     public static String getRule3Granular(String predicateUri, String propertyUri) {
         return String.format(RULE_3_GRANULAR, predicateUri, propertyUri);
     }
 
+    /**
+     *
+     * @param subjectUri subject uri
+     * @param predicateUri predicaate uri
+     * @return query if entries exist between provided subject and object
+     */
     public static String getQueryCheckResourceAvailability(String subjectUri, String predicateUri) {
         return String.format(Queries.CHECK_RESOURCE_AVAILABILITY, subjectUri, predicateUri);
     }
 
-    public static String getQueryRankedPropertiesHiddenSubject(String predicateUri, String objectUri, String subjectUri) {
+    /*public static String getQueryRankedPropertiesHiddenSubject(String predicateUri, String objectUri, String subjectUri) {
         return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_SUBJECT,
                 predicateUri,
                 objectUri,
@@ -213,8 +256,15 @@ public class Queries {
                 predicateUri,
                 objectUri,
                 propertyUri);
-    }
+    }*/
 
+    /**
+     * provided query execute it and get value of specific column
+     * only works if needed column count is 1
+     * @param queryString query
+     * @param column required col
+     * @return list of results
+     */
     public static List<String> execute(String queryString, String column) {
         Query query = QueryFactory.create(queryString);
         List<String> result = new ArrayList<>();
@@ -238,6 +288,13 @@ public class Queries {
         return result;
     }
 
+    /**
+     * provided query execute it and get value of specific column
+     * only works if needed column count is 1 ALONG WITH ?freq
+     * @param queryString query
+     * @param column required col
+     * @return Map of results along with freq
+     */
     public static Map<String, Integer> execFreq(String queryString, String column) {
         Query query = QueryFactory.create(queryString);
         Map<String, Integer> result = new LinkedHashMap<>();
@@ -260,35 +317,5 @@ public class Queries {
             e.printStackTrace();
         }
         return result;
-    }
-
-    public static void main( String[] args )
-    {
-        String queryStr = "" +
-                "SELECT ?o (count(?o) as ?freq) WHERE {\n" +
-                "?subj <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?o .\n" +
-                "filter (?subj = ?obj) {\n" +
-                "SELECT ?obj WHERE { \n" +
-                "        ?s <http://dbpedia.org/ontology/award> ?obj .\n" +
-                "        FILTER (?s = ?sub) {\n" +
-                "            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> <http://dbpedia.org/resource/Nobel_Prize_in_Physics> }\n" +
-                "        }\n" +
-                "    }\n" +
-                "}\n" +
-                "} group by ?o\n" +
-                "order by desc(?freq)";
-        Query query = QueryFactory.create(queryStr);
-
-        // Remote execution.
-        try ( QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query) ) {
-            // Set the DBpedia specific timeout.
-            ((QueryEngineHTTP)qexec).addParam("timeout", "10000") ;
-
-            // Execute.
-            ResultSet rs = qexec.execSelect();
-            ResultSetFormatter.out(System.out, rs, query);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
