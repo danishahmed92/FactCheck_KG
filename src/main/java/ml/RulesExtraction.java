@@ -183,10 +183,10 @@ public class RulesExtraction {
                     queryCache.put(currentQuery, subjectsPropertiesValuesMap);
                     extractedFeatures.setRule1PropertiesValuesMap(subjectsPropertiesValuesMap);
 
-                    PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, subjectsPropertiesValuesMap);
+                    /*PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, subjectsPropertiesValuesMap);*/
                 } else {
                     extractedFeatures.setRule1PropertiesValuesMap(queryCache.get(currentQuery));
-                    PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, queryCache.get(currentQuery));
+                    /*PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, queryCache.get(currentQuery));*/
                 }
 
                 /* Step 5 (RULE #2)*/
@@ -197,11 +197,11 @@ public class RulesExtraction {
                     queryCache.put(currentQuery, objectsPropertiesValuesMap);
                     extractedFeatures.setRule2PropertiesValuesMap(objectsPropertiesValuesMap);
 
-                    PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, objectsPropertiesValuesMap);
+                    /*PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, objectsPropertiesValuesMap);*/
                 } else {
                     extractedFeatures.setRule2PropertiesValuesMap(queryCache.get(currentQuery));
 
-                    PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, queryCache.get(currentQuery));
+                    /*PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, queryCache.get(currentQuery));*/
                 }
 
                 Map<String, Integer> propertiesRankedMap = rule3PropertiesRanked(predicateUri);

@@ -7,6 +7,13 @@ import utils.HibernateUtils;
 
 public class Main {
 
+    /*
+    * Configuration of Hibernate and test with DB
+    *
+    * For Training and Feature Extractions,
+    * execute main of RulesExtraction.Java
+    *
+    * */
     public static void main(String[] args) throws IOException {
     	Session session = HibernateUtils.getSessionFactory().openSession();
         session.beginTransaction();
