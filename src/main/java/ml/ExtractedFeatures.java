@@ -34,6 +34,13 @@ public class ExtractedFeatures implements Serializable {
 
     public Map<String,Integer> objOfAllSubjSamePropertyMap;
 
+    /**
+     * sets triple urls, and labels
+     * @param subject resource
+     * @param predicate property
+     * @param object resource
+     * @throws IOException
+     */
     public ExtractedFeatures(FactCheckResource subject, Property predicate, FactCheckResource object) throws IOException {
         subjectUri = String.format("<%s>", FactCheckResource.getDBpediaUri(subject));
         predicateUri = String.format("<%s>", predicate.getURI());
@@ -47,36 +54,62 @@ public class ExtractedFeatures implements Serializable {
         subjectLabelVariants = labelsFiltration.altLabelVariantsSimilarityBased(subject, "en");
     }
 
+    /**
+     * set semantic score for property with regard to synonym and other property comparision
+     * @param property predicate property to match
+     * @param score double value
+     */
     public void setSemanticSubjectProperty (String property, double score) {
         semanticSubjectProperty = property;
         semanticSubjectPropertyWeight = score;
     }
 
+    /**
+     * set property freq map according to rule 1
+     * @param propertyMap property map ranked in desc order
+     */
     public void setRule1SubjectsPropertiesMap (Map<String, Integer> propertyMap) {
         rule1SubjectsPropertiesMap = propertyMap;
     }
 
+    /**
+     * all properties deep with freq
+     * @param propertiesValuesMap map of property of property along with freq
+     */
     public void setRule1PropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
         rule1PropertiesValuesMap = propertiesValuesMap;
     }
 
+
+    /**
+     * all properties deep with freq
+     * @param propertiesValuesMap map of property of property along with freq
+     */
     public void setRule2PropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
         rule2PropertiesValuesMap = propertiesValuesMap;
     }
 
+    /**
+     * set property freq map according to rule 2
+     * @param propertyMap property map ranked in desc order
+     */
     public void setRule2ObjectsPropertiesMap (Map<String, Integer> propertyMap) {
         rule2ObjectsPropertiesMap = propertyMap;
     }
 
+    /**
+     * all properties deep with freq
+     * @param propertiesValuesMap map of property of property along with freq
+     */
     public void setRule3PropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
         rule3PropertiesValuesMap = propertiesValuesMap;
     }
 
+    /**
+     * set property freq map according to rule 3
+     * @param propertyMap property map ranked in desc order
+     */
     public void setRule3PropertiesRankedMap (Map<String, Integer> propertyMap) {
         rule3PropertiesRankedMap = propertyMap;
-    }
-
-    public void setObjOfAllSubjSamePropertyMap (Map<String, Integer> objectMap) {
-        objOfAllSubjSamePropertyMap = objectMap;
     }
 }
