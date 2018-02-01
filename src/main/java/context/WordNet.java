@@ -15,6 +15,13 @@ public class WordNet {
 
     public static RiWordNet wordNet = new RiWordNet(Config.configInstance.wordNetDict);
 
+    /**
+     *
+     * @param word word to find synonym for
+     * @param n number of synonyms
+     * @return list of synonyms
+     * @throws JWNLException
+     */
     public static List<String> getNTopSynonyms(String word, int n) throws JWNLException {
         List<String> synonyms = new ArrayList<>();
         POS pos = getPartOfSpeech(word);
@@ -34,6 +41,11 @@ public class WordNet {
         return synonyms;
     }
 
+    /**
+     * given a word get best part of speech
+     * @param word word
+     * @return string
+     */
     public static POS getPartOfSpeech(String word) {
         String partOfSpeech = wordNet.getBestPos(word);
         POS pos = POS.VERB;
@@ -50,6 +62,11 @@ public class WordNet {
         return pos;
     }
 
+    /**
+     * find definitions of given word
+     * @param word given word
+     * @return String definition
+     */
     public static String getWordDefinition(String word) {
         String partOfSpeech = wordNet.getBestPos(word);
         if (partOfSpeech == null)
