@@ -6,8 +6,9 @@
 	<session-factory>
 		<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
 		<property name="hibernate.connection.password">12345</property>
-		<property name="hibernate.connection.url">jdbc:mysql://131.234.244.68:3306/kg_mp</property>
-		<property name="hibernate.connection.username">ana</property>
+		<!-- <property name="hibernate.connection.url">jdbc:mysql://131.234.244.68:3306/kg_mp</property> -->
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/kg_mp</property>
+		<property name="hibernate.connection.username">root</property>
 		<property name="show_sql">true</property>
 		<property name="format_sql">false</property>
 		<mapping class="bean.KgPred"/>
@@ -16,5 +17,7 @@
 		<mapping class="bean.KgRuleMap"/>
 		<mapping class="bean.KgRuleSigvalMap"/>
 		<mapping class="bean.TriplePatternMap"/>
+		<mapping class="bean.KgRulePropvalBucket"/>
+		<mapping class="bean.KgRuleSigvalMap"/>
 	</session-factory>
 </hibernate-configuration>

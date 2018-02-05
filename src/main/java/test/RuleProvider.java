@@ -8,18 +8,20 @@ import org.hibernate.Session;
 
 public class RuleProvider {
 	/**
-	 * Query1 select pr.pr_label, rl.rl_propval, rsm.RSM_SIGVAL from kg_pred pr,
+	 * Query1:
+	 * select pr.pr_label, rl.rl_propval, rsm.RSM_SIGVAL from kg_pred pr,
 	 * kg_rule rl, kg_rule_sigval_map rsm where rl.rl_id in (select rlm.rm_rl_id
 	 * from kg_rule_map rlm where rlm.rm_tpm_id in (select tpat.TPM_ID from
-	 * triple_pattern_map tpat where tpat.TPM_OBJ = ' ' and tpat.TPM_PRED = ' ' and
-	 * tpat.TPM_SUBJ=' ')) and pr.pr_id in (select prm.pm_pr_id from kg_pred_map prm
+	 * triple_pattern_map tpat where tpat.TPM_OBJ = :obj and tpat.TPM_PRED = :pred and
+	 * tpat.TPM_SUBJ=:subj)) and pr.pr_id in (select prm.pm_pr_id from kg_pred_map prm
 	 * where prm.pm_rl_id = rl.rl_id) and rsm.RSM_RL_ID = rl.rl_id;
 	 * 
-	 * Query2 select pr.pr_label, rpb.RPB_PROPVAL, rsm.RSM_SIGVAL from kg_pred pr,
+	 * Query2:
+	 * select pr.pr_label, rpb.RPB_PROPVAL, rsm.RSM_SIGVAL from kg_pred pr,
 	 * kg_rule_propval_bucket rpb, kg_rule rl, kg_rule_sigval_map rsm where rl.rl_id
 	 * in (select rlm.rm_rl_id from kg_rule_map rlm where rlm.rm_tpm_id in (select
-	 * tpat.TPM_ID from triple_pattern_map tpat where tpat.TPM_OBJ = ' ' and
-	 * tpat.TPM_PRED = ' ' and tpat.TPM_SUBJ=' ')) and pr.pr_id in (select
+	 * tpat.TPM_ID from triple_pattern_map tpat where tpat.TPM_OBJ = :obj and
+	 * tpat.TPM_PRED = :pred and tpat.TPM_SUBJ= :subj)) and pr.pr_id in (select
 	 * prm.pm_pr_id from kg_pred_map prm where prm.pm_rl_id = rl.rl_id) and
 	 * rpb.RPB_RL_ID = rl.rl_id and rsm.RSM_RL_ID = rl.rl_id;
 	 * 

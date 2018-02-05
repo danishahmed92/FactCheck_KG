@@ -50,7 +50,7 @@ public class KgPred implements java.io.Serializable {
 		this.prId = prId;
 	}
 
-	@Column(name = "pr_uri", length = 300)
+	@Column(name = "pr_uri", length = 500)
 	public String getPrUri() {
 		return this.prUri;
 	}
@@ -59,7 +59,7 @@ public class KgPred implements java.io.Serializable {
 		this.prUri = prUri;
 	}
 
-	@Column(name = "pr_label", length = 200)
+	@Column(name = "pr_label", length = 500)
 	public String getPrLabel() {
 		return this.prLabel;
 	}

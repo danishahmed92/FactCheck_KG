@@ -18,7 +18,7 @@ public class TestRule {
 	// Get select query
 	public String getSelQuery(int index) {
 		StringBuilder queryStr = new StringBuilder();
-		queryStr.append("SELECT count(1) as ?cVal").append(index);
+		queryStr.append("SELECT count(1) as ?cVal ").append(index);
 		queryStr.append("WHERE { <").append(subjURI).append("> ");
 		queryStr.append(" <").append(predURI).append("> ");
 		queryStr.append(" <").append(objURI).append("> . }");
