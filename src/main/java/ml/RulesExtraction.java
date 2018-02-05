@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.jena.base.Sys;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -117,11 +116,15 @@ public class RulesExtraction {
                         saveEntryToDB = true;
                         ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + file.getFileName().toString());
 
+                        TimeUnit.SECONDS.sleep(1);
 //                        if (saveEntryToDB)
 //                            Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", file.getFileName().toString());
                     } catch (IOException ignore) {
                         // don't index files that can't be read.
+                    	ignore.printStackTrace();
                     } catch (JWNLException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     return FileVisitResult.CONTINUE;
@@ -131,8 +134,8 @@ public class RulesExtraction {
             System.out.println(path.getFileName().toString());
             try {
                 ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + path.getFileName().toString());
-                if (saveEntryToDB)
-                    Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", path.getFileName().toString());
+//                if (saveEntryToDB)
+//                    Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", path.getFileName().toString());
             } catch (JWNLException e) {
                 e.printStackTrace();
             }
@@ -196,10 +199,10 @@ public class RulesExtraction {
                     queryCache.put(currentQuery, subjectsPropertiesValuesMap);
                     extractedFeatures.setRule1PropertiesValuesMap(subjectsPropertiesValuesMap);
 
-                    /*PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, subjectsPropertiesValuesMap);*/
+                    PersistenceProvider.persistRules(arrRule1, subPropMap, subjectsPropertiesValuesMap);
                 } else {
                     extractedFeatures.setRule1PropertiesValuesMap(queryCache.get(currentQuery));
-                    /*PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, queryCache.get(currentQuery));*/
+                    PersistenceProvider.persistRules(arrRule1, subPropMap, queryCache.get(currentQuery));
                 }
                 System.out.println("Rule 1 finished");
 
@@ -215,11 +218,11 @@ public class RulesExtraction {
                     queryCache.put(currentQuery, objectsPropertiesValuesMap);
                     extractedFeatures.setRule2PropertiesValuesMap(objectsPropertiesValuesMap);
 
-                    /*PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, objectsPropertiesValuesMap);*/
+                    PersistenceProvider.persistRules(arrRule2, objPropMap, objectsPropertiesValuesMap);
                 } else {
                     extractedFeatures.setRule2PropertiesValuesMap(queryCache.get(currentQuery));
 
-                    /*PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, queryCache.get(currentQuery));*/
+                    PersistenceProvider.persistRules(arrRule2, objPropMap, queryCache.get(currentQuery));
                 }
                 System.out.println("Rule 2 finished");
 
@@ -325,7 +328,6 @@ public class RulesExtraction {
     public static Map<String, Map<String, Integer>> extractPropertyValues(RuleNumber ruleNumber, Map<String, Integer> propertyFreqMap, String predicateUri, String objectUri) {
         Object[] propertyArray = propertyFreqMap.keySet().toArray();
 
-//        int threshold = (int) Math.round(Math.sqrt(propertyFreqMap.size()));
         Map<String, Map<String, Integer>> propertiesValuesRankedMap = new LinkedHashMap<>();
 
         for (int i = 0; i < propertyFreqMap.size(); i++) {

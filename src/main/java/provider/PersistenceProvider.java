@@ -54,12 +54,12 @@ public class PersistenceProvider {
 		KgPred tempPred;
 		Integer tempFreq;
 		Map<String, Integer> propFreqMap;
-		Set<String> propLabels = new HashSet<>();
+		Map<String, Set<String>> predPropLabelsMap = new HashMap<>();
 		String tempWord;
 		KgRule tempRule;
-
+		Set<String> propLabels;
 		// Insert preds one by one to map
-		for (String predLabel : predFreq.keySet()) {
+		for (String predLabel : predRuleFreqMap.keySet()) {
 			tempFreq = predFreq.get(predLabel);
 			tempPred = new KgPred(predLabel, predLabel, tempFreq);
 			predMap.put(predLabel, tempPred);
@@ -68,10 +68,12 @@ public class PersistenceProvider {
 			for (String propVal : propFreqMap.keySet()) {
 				tempWord = fetchPropLabel(propVal);
 				tempFreq = propFreqMap.get(propVal);
+				propLabels = predPropLabelsMap.get(predLabel);
 				// Create Rule obj
-				if (checkEntry(tempWord, propLabels)) {
+				if (predRuleMap.containsKey(predLabel) && checkEntry(tempWord, propLabels)) {
 					// in case of similar looking propval just add to the frequency to current rule
 					// and create a map of list of rulebuckets against a rule
+					System.out.println(predLabel + "\t" + propVal + "\t" + predRuleMap);
 					tempRule = fetchRule(predLabel, propVal, predRuleMap);
 					tempRule.setRlPropfreq(tempRule.getRlPropfreq() + tempFreq);
 					// Put current information in a rule bucket
@@ -79,7 +81,9 @@ public class PersistenceProvider {
 					setRuleToBucket(predLabel, propVal, tempRule, ruleBucket);
 				} else {
 					// put the word in set
+					propLabels = new HashSet<>();
 					propLabels.add(tempWord);
+					predPropLabelsMap.put(predLabel, propLabels);
 					// Create rule objects and map them to pred label
 					tempRule = new KgRule(propVal, tempFreq);
 					setRuleToMap(predLabel, tempRule, predRuleMap);
@@ -96,22 +100,30 @@ public class PersistenceProvider {
 		KgPredMap kgPredMap;
 		KgRuleMap kgRuleMap;
 		session.save(triplePatternMap);
+		List<KgRule> tempRuleList;
 		for (String pred : predMap.keySet()) {
 			// Save the pred
 			tempPred = predMap.get(pred);
 			session.save(tempPred);
-
-			for (KgRule ruleObj : predRuleMap.get(pred)) {
+			tempRuleList = predRuleMap.get(pred);
+			if(tempRuleList==null)
+				continue;
+			for (KgRule ruleObj : tempRuleList) {
+				System.out.println("Saving Rule:\t"+ruleObj.getRlPropval());
 				// save the rule
 				session.save(ruleObj);
 				// Map rules to the triple
 				kgRuleMap = new KgRuleMap(ruleObj, triplePatternMap);
 				// Map rules to the predicate
 				kgPredMap = new KgPredMap(tempPred, ruleObj);
-				//Save rules to triple map
+				// Save rules to triple map
 				session.save(kgRuleMap);
-				//Save rules to predicate map
+				// Save rules to predicate map
 				session.save(kgPredMap);
+				Map<String, List<KgRulePropvalBucket>> valBucketMap = ruleBucket.get(pred);
+				List<KgRulePropvalBucket> tempBucketList = valBucketMap!=null?valBucketMap.get(ruleObj.getRlPropval()):null;
+				if(tempBucketList == null)
+					continue;
 				for (KgRulePropvalBucket bucket : ruleBucket.get(pred).get(ruleObj.getRlPropval())) {
 					// save the bucket
 					session.save(bucket);
@@ -124,12 +136,18 @@ public class PersistenceProvider {
 		return insCount;
 
 	}
+
 	/**
 	 * Method to set the repeating rule to its bucket
-	 * @param pred - predicate of that rule
-	 * @param propVal - property value of the rule
-	 * @param kgRule - object of the rule itself
-	 * @param ruleBucketMap - map to store the bucket for future retrieval
+	 * 
+	 * @param pred
+	 *            - predicate of that rule
+	 * @param propVal
+	 *            - property value of the rule
+	 * @param kgRule
+	 *            - object of the rule itself
+	 * @param ruleBucketMap
+	 *            - map to store the bucket for future retrieval
 	 */
 	public static void setRuleToBucket(String pred, String propVal, KgRule kgRule,
 			Map<String, Map<String, List<KgRulePropvalBucket>>> ruleBucketMap) {
@@ -138,20 +156,29 @@ public class PersistenceProvider {
 		if (bucketMap == null) {
 			bucketMap = new HashMap<>();
 			ruleBucketMap.put(pred, bucketMap);
-			bucketMap.put(propVal, new ArrayList<>());
+			bucketMap.put(kgRule.getRlPropval(), new ArrayList<>());
 		}
 
-		List<KgRulePropvalBucket> ruleList = bucketMap.get(propVal);
+		List<KgRulePropvalBucket> ruleList = bucketMap.get(kgRule.getRlPropval());
+		if (ruleList == null) {
+			ruleList = new ArrayList<>();
+			bucketMap.put(kgRule.getRlPropval(), ruleList);
+		}
 
 		// Add the rule to list
 		ruleList.add(kgRulePropvalBucket);
 
 	}
+
 	/**
 	 * Map a particular rule to its predicate in a given map structure
-	 * @param pred - predicate of the rule
-	 * @param kgRule - rule object to be mapped
-	 * @param predRuleMap - map data structure to store the rule in
+	 * 
+	 * @param pred
+	 *            - predicate of the rule
+	 * @param kgRule
+	 *            - rule object to be mapped
+	 * @param predRuleMap
+	 *            - map data structure to store the rule in
 	 */
 	public static void setRuleToMap(String pred, KgRule kgRule, Map<String, List<KgRule>> predRuleMap) {
 		List<KgRule> ruleList = predRuleMap.get(pred);
@@ -166,37 +193,52 @@ public class PersistenceProvider {
 		ruleList.add(kgRule);
 
 	}
+
 	/**
-	 * Method to fetch a particular rule from a give map based on its predicate and propVal
-	 * @param pred - predicate of the rule
-	 * @param propVal - propVal of the rule
-	 * @param predRuleMap - map data structure to fetch from
+	 * Method to fetch a particular rule from a give map based on its predicate and
+	 * propVal
+	 * 
+	 * @param pred
+	 *            - predicate of the rule
+	 * @param propVal
+	 *            - propVal of the rule
+	 * @param predRuleMap
+	 *            - map data structure to fetch from
 	 * @return - Rule object that is retrieved from the map
 	 */
 	public static KgRule fetchRule(String pred, String propVal, Map<String, List<KgRule>> predRuleMap) {
 		KgRule rule = null;
 		for (KgRule entry : predRuleMap.get(pred)) {
-			if (fetchPropLabel(entry.getRlPropval()).equals(fetchPropLabel(propVal)))
+			if (fetchPropLabel(entry.getRlPropval()).equalsIgnoreCase(fetchPropLabel(propVal)))
 				return entry;
 		}
 		return rule;
 	}
+
 	/**
 	 * Method to check for a particular String in a set of String
-	 * @param word - entry to be searched for
-	 * @param wordSet - set of entries
+	 * 
+	 * @param word
+	 *            - entry to be searched for
+	 * @param wordSet
+	 *            - set of entries
 	 * @return - true if found otherwise false
 	 */
 	public static boolean checkEntry(String word, Set<String> wordSet) {
-		for (String entry : wordSet) {
-			if (entry.equalsIgnoreCase(word))
-				return true;
+		if (wordSet != null) {
+			for (String entry : wordSet) {
+				if (entry.equalsIgnoreCase(word))
+					return true;
+			}
 		}
 		return false;
 	}
+
 	/**
 	 * Method to dissect a resource URI to fetch the last element
-	 * @param propVal - resource URI
+	 * 
+	 * @param propVal
+	 *            - resource URI
 	 * @return - last element of the URI
 	 */
 	public static String fetchPropLabel(String propVal) {

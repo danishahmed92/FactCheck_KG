@@ -48,7 +48,7 @@ public class KgRule implements java.io.Serializable {
 		this.rlId = rlId;
 	}
 
-	@Column(name = "rl_propval", length = 300)
+	@Column(name = "rl_propval", length = 500)
 	public String getRlPropval() {
 		return this.rlPropval;
 	}
