@@ -34,7 +34,8 @@ public class Queries {
             "        FILTER (?s = ?sub) {\n" +
             "            SELECT ?sub WHERE { ?sub %s %s }\n" +
             "        } .\n" +
-            "        FILTER (?p = %s)\n" +
+            "        FILTER (?p = %s) .\n" +
+            "        FILTER (strlen(?o) <= 500) .\n" +
             "    }\n" +
             "group by ?o\n" +
             "order by desc(?freq)";
@@ -49,7 +50,8 @@ public class Queries {
             "    } group by ?p }\n" +
             "} \n" +
             "group by ?p ?freq\n" +
-            "order by desc(?freq)";
+            "order by desc(?freq)\n" +
+            "limit 100";
 
     public static final String RULE_2_GRANULAR = "" +
             "SELECT ?o (count(?o) as ?freq) WHERE {\n" +
@@ -62,8 +64,10 @@ public class Queries {
             "        }\n" +
             "    }\n" +
             "}\n" +
+            "  FILTER (strlen(?o) <= 500) .\n" +
             "} group by ?o\n" +
-            "order by desc(?freq)";
+            "order by desc(?freq)\n" +
+            "limit 100";
 
     public static final String RULE_3 = "" +
             "SELECT distinct ?p ?freq WHERE {\n" +
@@ -75,8 +79,7 @@ public class Queries {
             "    } group by ?p }\n" +
             "} \n" +
             "group by ?p ?freq\n" +
-            "order by desc(?freq)\n" +
-            "limit 3";
+            "order by desc(?freq)\n";
 
     public static final String RULE_3_GRANULAR = "" +
             "SELECT ?o (count(?o) as ?freq) WHERE { \n" +
@@ -85,9 +88,11 @@ public class Queries {
             "            SELECT ?sub WHERE { ?sub %s ?obj }\n" +
             "        } .\n" +
             "        FILTER (?p = %s)\n" +
+            "        FILTER (strlen(?o) <= 500) .\n" +
             "    }\n" +
             "group by ?o\n" +
-            "order by desc(?freq)";
+            "order by desc(?freq)\n" +
+            "limit 100";
 
     public static final String GET_RANKED_PROPERTIES_HIDDEN_SUBJECT = "" +
             "SELECT ?p ?freq WHERE {\n" +
