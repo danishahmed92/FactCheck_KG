@@ -28,7 +28,7 @@ SELECT distinct ?p ?freq WHERE {
         } .
     } group by ?p }
 } 
-group by ?p
+group by ?p ?freq
 order by desc(?freq)
 
 # Granular property freq count comparision with respect to diff subjects of same category
@@ -118,7 +118,30 @@ order by desc(?freq)
 
 
 
+RULE 3 DISTRIBUTED:
+W.R.T SUBJECT:
+SELECT distinct ?p ?freq WHERE {
+    {SELECT distinct ?p (count(?o) as ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?sub) {
+            SELECT ?sub WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }
+        } .
+    } group by ?p }
+} 
+group by ?p ?freq
+order by desc(?freq)
 
+W.R.T OBJECT:
+SELECT distinct ?p ?freq WHERE {
+    {SELECT distinct ?p (count(?s) as ?freq) WHERE { 
+        ?s ?p ?o .
+        FILTER (?s = ?obj) {
+            SELECT ?obj WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }
+        } .
+    } group by ?p }
+} 
+group by ?p ?freq
+order by desc(?freq)
 
 
 

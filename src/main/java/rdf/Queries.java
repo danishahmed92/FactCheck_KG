@@ -28,14 +28,14 @@ public class Queries {
             "group by ?p ?freq\n" +
             "order by desc(?freq)";
 
-    public static final String RULE_1_GRANULAR = "" +
+    public static final String RULE_1_GRANULAR = "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
             "SELECT ?o (count(?o) as ?freq) WHERE { \n" +
             "        ?s ?p ?o .\n" +
             "        FILTER (?s = ?sub) {\n" +
             "            SELECT ?sub WHERE { ?sub %s %s }\n" +
             "        } .\n" +
             "        FILTER (?p = %s) .\n" +
-            "        FILTER (strlen(?o) <= 500) .\n" +
+            "        FILTER (strlen(xsd:string(?o))  <= 500) .\n" +
             "    }\n" +
             "group by ?o\n" +
             "order by desc(?freq)";
@@ -51,9 +51,9 @@ public class Queries {
             "} \n" +
             "group by ?p ?freq\n" +
             "order by desc(?freq)\n" +
-            "limit 100";
+            "";
 
-    public static final String RULE_2_GRANULAR = "" +
+    public static final String RULE_2_GRANULAR = "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
             "SELECT ?o (count(?o) as ?freq) WHERE {\n" +
             "?subj %s ?o .\n" +
             "filter (?subj = ?obj) {\n" +
@@ -64,10 +64,63 @@ public class Queries {
             "        }\n" +
             "    }\n" +
             "}\n" +
-            "  FILTER (strlen(?o) <= 500) .\n" +
+            "        FILTER (strlen(xsd:string(?o))  <= 500) .\n" +
             "} group by ?o\n" +
             "order by desc(?freq)\n" +
-            "limit 100";
+            "";
+
+    public static final String RULE_3_SUB = "" +
+            "SELECT distinct ?p ?freq WHERE {\n" +
+            "    {SELECT distinct ?p (count(?o) as ?freq) WHERE { \n" +
+            "        ?s ?p ?o .\n" +
+            "        FILTER (?s = ?sub) {\n" +
+            "            SELECT ?sub WHERE { ?sub %s ?obj }\n" +
+            "        } .\n" +
+            "    } group by ?p }\n" +
+            "} \n" +
+            "group by ?p ?freq\n" +
+            "order by desc(?freq)";
+
+    public static final String RULE_3_OBJ = "" +
+            "SELECT distinct ?p ?freq WHERE {\n" +
+            "    {SELECT distinct ?p (count(?s) as ?freq) WHERE { \n" +
+            "        ?s ?p ?o .\n" +
+            "        FILTER (?s = ?obj) {\n" +
+            "            SELECT ?obj WHERE { ?sub %s ?obj }\n" +
+            "        } .\n" +
+            "    } group by ?p }\n" +
+            "} \n" +
+            "group by ?p ?freq\n" +
+            "order by desc(?freq)";
+
+    public static final String RULE_3_SUB_GRANULAR = "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
+            "SELECT ?o (count(?o) as ?freq) WHERE { \n" +
+            "        ?s ?p ?o .\n" +
+            "        FILTER (?s = ?sub) {\n" +
+            "            SELECT ?sub WHERE { ?sub %s ?obj }\n" +
+            "        } .\n" +
+            "        FILTER (?p = %s)\n" +
+            "        FILTER (strlen(xsd:string(?o))  <= 500) .\n" +
+            "    }\n" +
+            "group by ?o\n" +
+            "order by desc(?freq)\n" +
+            "";
+
+    public static final String RULE_3_OBJ_GRANULAR = "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
+            "SELECT ?o (count(?o) as ?freq) WHERE {\n" +
+            "?subj %s ?o .\n" +
+            "filter (?subj = ?obj) {\n" +
+            "SELECT ?obj WHERE { \n" +
+            "        ?s %s ?obj .\n" +
+            "        FILTER (?s = ?sub) {\n" +
+            "            SELECT ?sub WHERE { ?sub %s ?obj }\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n" +
+            "        FILTER (strlen(xsd:string(?o))  <= 500) .\n" +
+            "} group by ?o\n" +
+            "order by desc(?freq)\n" +
+            "";
 
     public static final String RULE_3 = "" +
             "SELECT distinct ?p ?freq WHERE {\n" +
@@ -81,83 +134,18 @@ public class Queries {
             "group by ?p ?freq\n" +
             "order by desc(?freq)\n";
 
-    public static final String RULE_3_GRANULAR = "" +
+    public static final String RULE_3_GRANULAR = "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
             "SELECT ?o (count(?o) as ?freq) WHERE { \n" +
             "        ?s ?p ?o .\n" +
             "        FILTER (?s = ?sub) {\n" +
             "            SELECT ?sub WHERE { ?sub %s ?obj }\n" +
             "        } .\n" +
             "        FILTER (?p = %s)\n" +
-            "        FILTER (strlen(?o) <= 500) .\n" +
+            "        FILTER (strlen(xsd:string(?o))  <= 500) .\n" +
             "    }\n" +
             "group by ?o\n" +
             "order by desc(?freq)\n" +
-            "limit 100";
-
-    public static final String GET_RANKED_PROPERTIES_HIDDEN_SUBJECT = "" +
-            "SELECT ?p ?freq WHERE {\n" +
-            "    {SELECT ?s ?p (COUNT(?o) AS ?freq) WHERE { \n" +
-            "        ?s ?p ?o .\n" +
-            "        FILTER (?s = ?sub) {\n" +
-            "            SELECT ?sub WHERE { ?sub %s %s }\n" +
-            "        } .\n" +
-            "        FILTER (?p = ?pred && ?o = ?obj) {\n" +
-            "            SELECT ?pred ?obj WHERE { %s ?pred ?obj }\n" +
-            "        }\n" +
-            "    }\n" +
-            "    GROUP BY ?s ?p}\n" +
-            "    FILTER (?s = %s)\n" +
-            "} \n" +
-            "GROUP BY ?p ?freq\n" +
-            "ORDER BY DESC(?freq)";
-
-    public static final String GET_RANKED_PROPERTIES_HIDDEN_OBJECT = "" +
-            "SELECT ?p ?freq WHERE {\n" +
-            "    {SELECT ?o ?p (COUNT(?s) AS ?freq) WHERE { \n" +
-            "        ?s ?p ?o .\n" +
-            "        FILTER (?o = ?obj) {\n" +
-            "            SELECT ?obj WHERE { %s %s ?obj }\n" +
-            "        } .\n" +
-            "        FILTER (?p = ?pred && ?s = ?sub) {\n" +
-            "            SELECT ?sub ?pred WHERE { ?sub ?pred %s }\n" +
-            "        }\n" +
-            "    }\n" +
-            "    GROUP BY ?p ?o}\n" +
-            "    FILTER (?o = %s)\n" +
-            "}\n" +
-            "GROUP BY ?p ?freq\n" +
-            "ORDER BY DESC(?freq)";
-
-    public static final String GET_RANKED_OBJECTS_HIDDEN_PROPERTIES = "" +
-            "SELECT ?o ?freq WHERE {\n" +
-            "    {SELECT ?o ?p (COUNT(?s) AS ?freq) WHERE { \n" +
-            "        ?s ?p ?o .\n" +
-            "        FILTER (?p = ?pred) {\n" +
-            "            SELECT ?pred WHERE { %s ?pred %s }\n" +
-            "        } .\n" +
-            "        FILTER (?o = ?obj && ?s = ?sub) {\n" +
-            "            SELECT ?sub ?obj WHERE { ?sub %s ?obj }\n" +
-            "        }\n" +
-            "    }\n" +
-            "    GROUP BY ?o ?p}\n" +
-            "    FILTER (?p = %s)\n" +
-            "    FILTER (?o = ?ob) {\n" +
-            "        SELECT ?ob WHERE { %s %s ?ob }\n" +
-            "    }\n" +
-            "}\n" +
-            "GROUP BY ?o ?freq\n" +
-            "ORDER BY DESC(?freq)";
-
-    public static final String GET_RANKED_PROPERTY_VALUES_OF_SUBJECT = "" +
-            "SELECT ?o (COUNT(?o) AS ?freq) WHERE { \n" +
-            "        ?s ?p ?o .\n" +
-            "        FILTER (?s = ?sub) {\n" +
-            "            SELECT ?sub WHERE { ?sub %s %s }\n" +
-            "        } .\n" +
-            "        FILTER (?p = %s)\n" +
-            "    }\n" +
-            "GROUP BY ?o\n" +
-            "ORDER BY DESC(?freq)";
+            "";
 
     /**
      *
@@ -204,6 +192,44 @@ public class Queries {
     /**
      *
      * @param predicateUri predicate uri
+     * @return query for rule 3 for all subjects
+     */
+    public static String getRule3Sub(String predicateUri) {
+        return String.format(RULE_3_SUB, predicateUri);
+    }
+
+    /**
+     *
+     * @param predicateUri predicate uri
+     * @param propertyUri to get value of and get freq
+     * @return query string needed for rule 3
+     */
+    public static String getRule3SubGranular(String predicateUri, String propertyUri) {
+        return String.format(RULE_3_SUB_GRANULAR, predicateUri, propertyUri);
+    }
+
+    /**
+     *
+     * @param predicateUri for rule 3
+     * @return query string needed for rule 3 objects
+     */
+    public static String getRule3Obj(String predicateUri) {
+        return String.format(RULE_3_OBJ, predicateUri);
+    }
+
+    /**
+     *
+     * @param predicateUri predicate uri
+     * @param propertyUri to get value of and get freq
+     * @return query string needed for rule 3
+     */
+    public static String getRule3ObjGranular(String propertyUri, String predicateUri) {
+        return String.format(RULE_3_OBJ_GRANULAR, propertyUri, predicateUri, predicateUri);
+    }
+
+    /**
+     *
+     * @param predicateUri predicate uri
      * @return query for rule 3
      */
     public static String getRule3(String predicateUri) {
@@ -229,39 +255,6 @@ public class Queries {
     public static String getQueryCheckResourceAvailability(String subjectUri, String predicateUri) {
         return String.format(Queries.CHECK_RESOURCE_AVAILABILITY, subjectUri, predicateUri);
     }
-
-    /*public static String getQueryRankedPropertiesHiddenSubject(String predicateUri, String objectUri, String subjectUri) {
-        return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_SUBJECT,
-                predicateUri,
-                objectUri,
-                subjectUri,
-                subjectUri);
-    }
-
-    public static String getQueryRankedPropertiesHiddenObject(String subjectUri, String predicateUri, String objectUri) {
-        return String.format(Queries.GET_RANKED_PROPERTIES_HIDDEN_OBJECT,
-                subjectUri,
-                predicateUri,
-                objectUri,
-                objectUri);
-    }
-
-    public static String getQueryRankedObjectHiddenProperties(String subjectUri, String objectUri, String predicateUri) {
-        return String.format(Queries.GET_RANKED_OBJECTS_HIDDEN_PROPERTIES,
-                subjectUri,
-                objectUri,
-                predicateUri,
-                predicateUri,
-                subjectUri,
-                predicateUri);
-    }
-
-    public static String getQueryRankedPropertyValues(String predicateUri, String objectUri, String propertyUri) {
-        return String.format(Queries.GET_RANKED_PROPERTY_VALUES_OF_SUBJECT,
-                predicateUri,
-                objectUri,
-                propertyUri);
-    }*/
 
     /**
      * provided query execute it and get value of specific column
@@ -315,12 +308,41 @@ public class Queries {
 
                 String colValue = soln.get(column).toString();
                 Integer freq = soln.getLiteral("freq").getInt();
-                result.put(colValue, freq);
+                if (colValue != null)
+                    result.put(colValue, freq);
             }
             qExec.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public static void main( String[] args )
+    {
+        String queryStr = "SELECT distinct ?p ?freq WHERE {\n" +
+                "    {SELECT distinct ?p (count(?s) as ?freq) WHERE { \n" +
+                "        ?s ?p ?o .\n" +
+                "        FILTER (?s = ?obj) {\n" +
+                "            SELECT ?obj WHERE { ?sub <http://dbpedia.org/ontology/award> ?obj }\n" +
+                "        } .\n" +
+                "    } group by ?p }\n" +
+                "} \n" +
+                "group by ?p ?freq\n" +
+                "order by desc(?freq)\n";
+
+        Query query = QueryFactory.create(queryStr);
+
+        // Remote execution.
+        try ( QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query) ) {
+            // Set the DBpedia specific timeout.
+            ((QueryEngineHTTP)qexec).addParam("timeout", "10000") ;
+
+            // Execute.
+            ResultSet rs = qexec.execSelect();
+            ResultSetFormatter.out(System.out, rs, query);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

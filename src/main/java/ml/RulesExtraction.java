@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.jena.base.Sys;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -71,7 +72,7 @@ import javax.persistence.criteria.CriteriaBuilder;
  *
  * */
 enum RuleNumber {
-    RULE_1(1), RULE_2(2), RULE_3(3);
+    RULE_1(1), RULE_2(2), RULE_3_SUB(31), RULE_3_OBJ(32);
     private int value;
     private RuleNumber(int value) {
         this.value = value;
@@ -116,14 +117,11 @@ public class RulesExtraction {
                         saveEntryToDB = true;
                         ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + file.getFileName().toString());
 
-                        TimeUnit.SECONDS.sleep(1);
-                        if (saveEntryToDB)
-                            Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", file.getFileName().toString());
+//                        if (saveEntryToDB)
+//                            Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", file.getFileName().toString());
                     } catch (IOException ignore) {
                         // don't index files that can't be read.
                     } catch (JWNLException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     return FileVisitResult.CONTINUE;
@@ -139,6 +137,21 @@ public class RulesExtraction {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static Map<String, Integer> setThresholdMap(Map<String, Integer> map) {
+        int threshold;
+        int counter = 0;
+
+        threshold = (int) Math.sqrt(map.size());
+        Map<String, Integer> thresholdMap = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> entry : map.entrySet()) {
+            if (counter < threshold) {
+                thresholdMap.put(entry.getKey(), entry.getValue());
+            }
+            counter++;
+        }
+        return thresholdMap;
     }
 
     /**
@@ -172,14 +185,14 @@ public class RulesExtraction {
             List<String> resourceAvailability = checkResourceAvailability(subjectUri, predicateUri);
             if (resourceAvailability.size() != 0) {
                 /* Step 4 (RULE #1)*/
-
                 Map<String, Integer> subjectsPropertiesMap = rule1SubjectsPropertiesIntersection(predicateUri, objectUri);
+                Map<String, Integer> subPropMap = setThresholdMap(subjectsPropertiesMap);
+                subjectsPropertiesMap.clear();
+
                 String[] arrRule1 = {"U", predicate.getURI(), FactCheckResource.getDBpediaUri(object)};
-                String[] arrRule2 = {FactCheckResource.getDBpediaUri(subject), predicate.getURI(), "U"};
-//                String[] arrRule1 = {"U", predicate.getURI(), FactCheckResource.getDBpediaUri(object)};
                 if (!queryCache.containsKey(currentQuery)) {
-                    extractedFeatures.setRule1SubjectsPropertiesMap(subjectsPropertiesMap);
-                    Map<String, Map<String, Integer>> subjectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_1, subjectsPropertiesMap, predicateUri, objectUri);
+                    extractedFeatures.setRule1SubjectsPropertiesMap(subPropMap);
+                    Map<String, Map<String, Integer>> subjectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_1, subPropMap, predicateUri, objectUri);
                     queryCache.put(currentQuery, subjectsPropertiesValuesMap);
                     extractedFeatures.setRule1PropertiesValuesMap(subjectsPropertiesValuesMap);
 
@@ -188,12 +201,17 @@ public class RulesExtraction {
                     extractedFeatures.setRule1PropertiesValuesMap(queryCache.get(currentQuery));
                     /*PersistenceProvider.persistRules(arrRule1, subjectsPropertiesMap, queryCache.get(currentQuery));*/
                 }
+                System.out.println("Rule 1 finished");
 
                 /* Step 5 (RULE #2)*/
                 Map<String, Integer> objectsPropertiesMap = rule2ObjectsPropertiesIntersection(subjectUri, predicateUri);
+                Map<String, Integer> objPropMap = setThresholdMap(objectsPropertiesMap);
+                objectsPropertiesMap.clear();
+
+                String[] arrRule2 = {FactCheckResource.getDBpediaUri(subject), predicate.getURI(), "U"};
                 if (!queryCache.containsKey(currentQuery)) {
-                    extractedFeatures.setRule2ObjectsPropertiesMap(objectsPropertiesMap);
-                    Map<String, Map<String, Integer>> objectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_2, subjectsPropertiesMap, predicateUri, objectUri);
+                    extractedFeatures.setRule2ObjectsPropertiesMap(objPropMap);
+                    Map<String, Map<String, Integer>> objectsPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_2, objPropMap, predicateUri, objectUri);
                     queryCache.put(currentQuery, objectsPropertiesValuesMap);
                     extractedFeatures.setRule2PropertiesValuesMap(objectsPropertiesValuesMap);
 
@@ -203,16 +221,30 @@ public class RulesExtraction {
 
                     /*PersistenceProvider.persistRules(arrRule2, objectsPropertiesMap, queryCache.get(currentQuery));*/
                 }
+                System.out.println("Rule 2 finished");
 
-                Map<String, Integer> propertiesRankedMap = rule3PropertiesRanked(predicateUri);
+                /* Step 6 (RULE #3)*/
+                Map<String, Integer> propertiesSubjectRankedMap = rule3SubjectPropertiesRanked(predicateUri);
+                Map<String, Integer> propertiesObjectRankedMap = rule3ObjectPropertiesRanked(predicateUri);
+                Map<String, Integer> propertiesSubRankedMap = setThresholdMap(propertiesSubjectRankedMap);
+                Map<String, Integer> propertiesObjRankedMap = setThresholdMap(propertiesObjectRankedMap);
+                propertiesSubjectRankedMap.clear();
+                propertiesObjectRankedMap.clear();
+                System.out.println("Rule 3 Sub threshold:\t" + propertiesSubRankedMap.size());
+                System.out.println("Rule 3 Obj threshold:\t" + propertiesObjRankedMap.size());
+
                 if (!queryCache.containsKey(currentQuery)) {
-                    extractedFeatures.setRule3PropertiesRankedMap(propertiesRankedMap);
-                    Map<String, Map<String, Integer>> propertiesValuesMap = extractPropertyValues(RuleNumber.RULE_3, subjectsPropertiesMap, predicateUri, objectUri);
-                    queryCache.put(currentQuery, propertiesValuesMap);
-                    extractedFeatures.setRule3PropertiesValuesMap(propertiesValuesMap);
-                } else {
-                    extractedFeatures.setRule3PropertiesValuesMap(queryCache.get(currentQuery));
+                    extractedFeatures.setRule3SubPropertiesRankedMap(propertiesSubRankedMap);
+                    Map<String, Map<String, Integer>> subPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_3_SUB, propertiesSubRankedMap, predicateUri, objectUri);
+                    queryCache.put(currentQuery, subPropertiesValuesMap);
+                    extractedFeatures.setRule3SubPropertiesValuesMap(subPropertiesValuesMap);
+
+                    extractedFeatures.setRule3ObjPropertiesRankedMap(propertiesObjRankedMap);
+                    Map<String, Map<String, Integer>> objPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_3_OBJ, propertiesObjRankedMap, predicateUri, objectUri);
+                    queryCache.put(currentQuery, objPropertiesValuesMap);
+                    extractedFeatures.setRule3ObjPropertiesValuesMap(objPropertiesValuesMap);
                 }
+                System.out.println("Rule 3 finished");
 
                 System.out.println();
                 return extractedFeatures;
@@ -255,7 +287,7 @@ public class RulesExtraction {
         }
         String query = String.format(Queries.ALL_PREDICATES_OF_SUBJECT, "<" + FactCheckResource.getDBpediaUri(subject) + ">");
         List<String> results = Queries.execute(query, "predicate");
-        System.out.println(results);
+
         Map<String, Double> propertySimilarityMap = new HashMap<String, Double>();
         for (String property : results) {
             int index = property.lastIndexOf('/') + 1;
@@ -293,10 +325,10 @@ public class RulesExtraction {
     public static Map<String, Map<String, Integer>> extractPropertyValues(RuleNumber ruleNumber, Map<String, Integer> propertyFreqMap, String predicateUri, String objectUri) {
         Object[] propertyArray = propertyFreqMap.keySet().toArray();
 
-        int threshold = (int) Math.round(Math.sqrt(propertyFreqMap.size()));
+//        int threshold = (int) Math.round(Math.sqrt(propertyFreqMap.size()));
         Map<String, Map<String, Integer>> propertiesValuesRankedMap = new LinkedHashMap<>();
 
-        for (int i = 0; i < threshold; i++) {
+        for (int i = 0; i < propertyFreqMap.size(); i++) {
             String propertyUri = String.format("<%s>", propertyArray[i].toString());
             Map <String, Integer> propertyValuesMap = null;
             switch (ruleNumber) {
@@ -306,8 +338,11 @@ public class RulesExtraction {
                 case RULE_2:
                     propertyValuesMap = rule2_1PropertyValuesFreq(predicateUri, objectUri, propertyUri);
                     break;
-                case RULE_3:
-                    propertyValuesMap = rule3_1PropertyValuesFreq(predicateUri, propertyUri);
+                case RULE_3_SUB:
+                    propertyValuesMap = rule3_1SubjectPropertyValuesFreq(predicateUri, propertyUri);
+                    break;
+                case RULE_3_OBJ:
+                    propertyValuesMap = rule3_1ObjectPropertyValuesFreq(predicateUri, propertyUri);
                     break;
             }
 
@@ -317,6 +352,8 @@ public class RulesExtraction {
                 e.printStackTrace();
             }
 
+            int threshold = (int) Math.sqrt(propertyValuesMap.size());
+            int counter = 0;
             Map <String, Integer> reducedPropertyValuesMap = new LinkedHashMap<>();
             if (propertiesValuesRankedMap.get(propertyArray[i].toString()) != null)
                 reducedPropertyValuesMap = propertiesValuesRankedMap.get(propertyArray[i].toString());
@@ -332,13 +369,17 @@ public class RulesExtraction {
                 if (property.contains("#")
                         || property.matches(".*\\d+.*")
                         || property.equals(predicateUri)
-                        || ((int)pair.getValue() == 1)) {
+                        /*|| ((int)pair.getValue() == 1)*/) {
                     it.remove();
                     continue;
                 }
-                reducedPropertyValuesMap.put(pair.getKey().toString(), Integer.parseInt(pair.getValue().toString()));
+                if (counter < threshold) {
+                    reducedPropertyValuesMap.put(pair.getKey().toString(), Integer.parseInt(pair.getValue().toString()));
+                    counter++;
+                }
                 it.remove(); // avoids a ConcurrentModificationException
             }
+
             propertiesValuesRankedMap.put(propertyArray[i].toString(), reducedPropertyValuesMap);
         }
         return propertiesValuesRankedMap;
@@ -423,6 +464,50 @@ public class RulesExtraction {
      */
     public static Map<String, Integer> rule3_1PropertyValuesFreq(String predicateUri, String propertyUri) {
         String query = Queries.getRule3Granular(predicateUri, propertyUri);
+        return Queries.execFreq(query, QUERY_VAR_OBJECT);
+    }
+
+    /**
+     * Rule: ?s p ?o
+     * @param predicateUri predicate url
+     * @return
+     */
+    public static Map<String, Integer> rule3SubjectPropertiesRanked(String predicateUri) {
+        String query = Queries.getRule3Sub(predicateUri);
+        currentQuery = query;
+        return Queries.execFreq(query, QUERY_VAR_PREDICATE);
+    }
+
+    /**
+     * get deeper values of properties extracted from rule 3
+     * @param predicateUri predicate url
+     * @param propertyUri property url
+     * @return
+     */
+    public static Map<String, Integer> rule3_1SubjectPropertyValuesFreq(String predicateUri, String propertyUri) {
+        String query = Queries.getRule3SubGranular(predicateUri, propertyUri);
+        return Queries.execFreq(query, QUERY_VAR_OBJECT);
+    }
+
+    /**
+     * Rule: ?s p ?o
+     * @param predicateUri predicate url
+     * @return
+     */
+    public static Map<String, Integer> rule3ObjectPropertiesRanked(String predicateUri) {
+        String query = Queries.getRule3Obj(predicateUri);
+        currentQuery = query;
+        return Queries.execFreq(query, QUERY_VAR_PREDICATE);
+    }
+
+    /**
+     * get deeper values of properties extracted from rule 3
+     * @param predicateUri predicate url
+     * @param propertyUri property url
+     * @return
+     */
+    public static Map<String, Integer> rule3_1ObjectPropertyValuesFreq(String predicateUri, String propertyUri) {
+        String query = Queries.getRule3ObjGranular(predicateUri, propertyUri);
         return Queries.execFreq(query, QUERY_VAR_OBJECT);
     }
 

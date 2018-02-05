@@ -29,8 +29,11 @@ public class ExtractedFeatures implements Serializable {
     public Map<String, Integer> rule2ObjectsPropertiesMap;
     public Map<String, Map<String, Integer>> rule2PropertiesValuesMap;
 
-    public Map<String, Integer> rule3PropertiesRankedMap;
-    public Map<String, Map<String, Integer>> rule3PropertiesValuesMap;
+    public Map<String, Integer> rule3SubPropertiesRankedMap;
+    public Map<String, Map<String, Integer>> rule3SubPropertiesValuesMap;
+
+    public Map<String, Integer> rule3ObjPropertiesRankedMap;
+    public Map<String, Map<String, Integer>> rule3ObjPropertiesValuesMap;
 
     public Map<String,Integer> objOfAllSubjSamePropertyMap;
 
@@ -98,18 +101,34 @@ public class ExtractedFeatures implements Serializable {
     }
 
     /**
+     * set property freq map according to rule 3
+     * @param propertyMap property map ranked in desc order
+     */
+    public void setRule3SubPropertiesRankedMap (Map<String, Integer> propertyMap) {
+        rule3SubPropertiesRankedMap = propertyMap;
+    }
+
+    /**
      * all properties deep with freq
      * @param propertiesValuesMap map of property of property along with freq
      */
-    public void setRule3PropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
-        rule3PropertiesValuesMap = propertiesValuesMap;
+    public void setRule3SubPropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
+        rule3SubPropertiesValuesMap = propertiesValuesMap;
     }
 
     /**
      * set property freq map according to rule 3
      * @param propertyMap property map ranked in desc order
      */
-    public void setRule3PropertiesRankedMap (Map<String, Integer> propertyMap) {
-        rule3PropertiesRankedMap = propertyMap;
+    public void setRule3ObjPropertiesRankedMap (Map<String, Integer> propertyMap) {
+        rule3ObjPropertiesRankedMap = propertyMap;
+    }
+
+    /**
+     * all properties deep with freq
+     * @param propertiesValuesMap map of property of property along with freq
+     */
+    public void setRule3ObjPropertiesValuesMap (Map<String, Map<String, Integer>> propertiesValuesMap) {
+        rule3ObjPropertiesValuesMap = propertiesValuesMap;
     }
 }
