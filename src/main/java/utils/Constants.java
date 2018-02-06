@@ -1,5 +1,9 @@
 package utils;
-
+/**
+ * Interface to store the constant value across the program
+ * @author Nikit
+ *
+ */
 public class Constants {
     public static final String DBPEDIA_URI = "http://dbpedia.org/";
     public static final String DBPEDIA_ONTOLOGY_NAMESPACE = "http://dbpedia.org/ontology/";
@@ -16,4 +20,6 @@ public class Constants {
 
     public static final String RESOURCE_DIRECTORY = "src/main/resources/";
     public static final String CONFIG_FILE = "factCheck.ini";
+    
+    public static final String URI_REGEX = "^http(([^:\\/?#]+):)?(\\/\\/([^\\/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?$";
 }

@@ -3,6 +3,12 @@ package utils;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 
+/**
+ * Class to provide hibernate utils such as static Hibernate SessionFactory
+ * 
+ * @author Nikit
+ *
+ */
 @SuppressWarnings("deprecation")
 public class HibernateUtils {
 
@@ -18,6 +24,11 @@ public class HibernateUtils {
 		}
 	}
 
+	/**
+	 * Method to return session factory
+	 * 
+	 * @return - Hibernate Session Factory
+	 */
 	public static SessionFactory getSessionFactory() {
 		return sessionFactory;
 	}

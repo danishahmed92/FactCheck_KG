@@ -1,6 +1,5 @@
 package test;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,10 +12,25 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
 
+/**
+ * Class to implement methods that will help provide a confidence value for a
+ * collection of provided rules
+ * 
+ * @author Nikit
+ *
+ */
 public class ConfidenceProvider {
 	public static int ruleLim = 120;
 
 	// Method to accept a testRule object and return count of records fetched
+	/**
+	 * Method to accept a list of TestRule objects and calculate the total
+	 * significance value of those rules
+	 * 
+	 * @param rules
+	 *            - List of TestRule objects
+	 * @return computed significance value
+	 */
 	public static double getConfidenceValue(List<TestRule> rules) {
 		double cfVal = 0;
 		int startInd = 0;
@@ -40,6 +54,14 @@ public class ConfidenceProvider {
 	}
 
 	// Query Generator
+	/**
+	 * Method to generate a SPARQL query to calculate total significance value for a
+	 * list of rules.
+	 * 
+	 * @param rules
+	 *            - list of TestRule
+	 * @return - Generate Query String
+	 */
 	public static String generateQuery(List<TestRule> rules) {
 		StringBuilder queryStr = new StringBuilder();
 		Map<Integer, TestRule> indexMap = getIndexMap(rules);
@@ -65,11 +87,19 @@ public class ConfidenceProvider {
 		queryStr.append("PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ");
 		queryStr.append("PREFIX fn: <http://www.w3.org/2005/xpath-functions#> ");
 		queryStr.append(" SELECT ")/* .append(calcStat) */.append(" ?cf WHERE { ").append(selStat).append(bindStat)
-				.append(" ").append(" BIND( ").append(calcStat).append(" as ?cf1) . BIND(str(?cf1) as ?cf) .").append(" } LIMIT 1");
+				.append(" ").append(" BIND( ").append(calcStat).append(" as ?cf1) . BIND(str(?cf1) as ?cf) .")
+				.append(" } LIMIT 1");
 		return queryStr.toString();
 	}
 
 	// index map generator
+	/**
+	 * Method to map a list of TestRule against its index
+	 * 
+	 * @param rules
+	 *            - list of TestRule
+	 * @return - indexed Map
+	 */
 	public static Map<Integer, TestRule> getIndexMap(List<TestRule> rules) {
 		Map<Integer, TestRule> indexMap = new HashMap<>();
 		int i = 1;
@@ -80,6 +110,14 @@ public class ConfidenceProvider {
 	}
 
 	// Query Executor
+	/**
+	 * Method to execute a SPARQL query on SPARQL remote server to calculate and
+	 * return confidence value
+	 * 
+	 * @param queryStr
+	 *            - Query String to execute
+	 * @return - confidence value
+	 */
 	public static double executeResultQuery(String queryStr) {
 		double res = 0;
 		System.out.println(queryStr);

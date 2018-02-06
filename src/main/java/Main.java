@@ -2,7 +2,6 @@ import java.io.IOException;
 
 import org.hibernate.Session;
 
-import bean.TriplePatternMap;
 import test.FactChecker;
 import utils.HibernateUtils;
 
@@ -27,7 +26,8 @@ public class Main {
 		FactChecker factChecker = new FactChecker();
 		String[] triple = { "http://dbpedia.org/resource/Henry_Dunant", "http://dbpedia.org/ontology/award",
 				"http://dbpedia.org/resource/Nobel_Peace_Prize" };
-		factChecker.getFactCFVal(triple, session);
+		double cfVal = factChecker.getFactCFVal(triple, session);
+		System.out.println("Total confidence value: "+cfVal);
 		session.getTransaction().commit();
 		session.close();
 	}
