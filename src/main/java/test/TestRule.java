@@ -18,11 +18,19 @@ public class TestRule {
 	// Get select query
 	public String getSelQuery(int index) {
 		StringBuilder queryStr = new StringBuilder();
-		queryStr.append("SELECT count(1) as ?cVal ").append(index);
-		queryStr.append("WHERE { <").append(subjURI).append("> ");
+		queryStr.append("SELECT (count(1) as ?cVal").append(index);
+		queryStr.append(") WHERE { <").append(subjURI).append("> ");
 		queryStr.append(" <").append(predURI).append("> ");
-		queryStr.append(" <").append(objURI).append("> . }");
+		queryStr.append(" ").append(encloseObj(objURI)).append(" . }");
 		return queryStr.toString();
+	}
+	
+	public static String encloseObj(String objURI) {
+		if(objURI.matches(".*http.*:\\/\\/.*")) {
+			return "<"+objURI+">";
+		}
+		else
+			return "\""+objURI+"\"";
 	}
 
 	// Get bind phrase
@@ -34,7 +42,7 @@ public class TestRule {
 	// Get calc phrase
 	public String getCalcPhrase(int index) {
 		StringBuilder queryStr = new StringBuilder();
-		queryStr.append(" (xsd:float(?result").append(index).append(")*").append(sigVal).append(") ");
+		queryStr.append(" ?result").append(index).append("*").append(sigVal).append(" ");
 		return queryStr.toString();
 	}
 	// Getter and Setters
