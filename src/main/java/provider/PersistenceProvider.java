@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 
 import bean.KgPred;
@@ -106,10 +107,10 @@ public class PersistenceProvider {
 			tempPred = predMap.get(pred);
 			session.save(tempPred);
 			tempRuleList = predRuleMap.get(pred);
-			if(tempRuleList==null)
+			if (tempRuleList == null)
 				continue;
 			for (KgRule ruleObj : tempRuleList) {
-				System.out.println("Saving Rule:\t"+ruleObj.getRlPropval());
+				System.out.println("Saving Rule:\t" + ruleObj.getRlPropval());
 				// save the rule
 				session.save(ruleObj);
 				// Map rules to the triple
@@ -121,8 +122,10 @@ public class PersistenceProvider {
 				// Save rules to predicate map
 				session.save(kgPredMap);
 				Map<String, List<KgRulePropvalBucket>> valBucketMap = ruleBucket.get(pred);
-				List<KgRulePropvalBucket> tempBucketList = valBucketMap!=null?valBucketMap.get(ruleObj.getRlPropval()):null;
-				if(tempBucketList == null)
+				List<KgRulePropvalBucket> tempBucketList = valBucketMap != null
+						? valBucketMap.get(ruleObj.getRlPropval())
+						: null;
+				if (tempBucketList == null)
 					continue;
 				for (KgRulePropvalBucket bucket : ruleBucket.get(pred).get(ruleObj.getRlPropval())) {
 					// save the bucket
@@ -244,6 +247,34 @@ public class PersistenceProvider {
 	public static String fetchPropLabel(String propVal) {
 		String[] words = propVal.split("[\\/]");
 		return words[words.length - 1];
+	}
+
+	/**
+	 * Method to calculate the significance values throughout the rules and insert
+	 * them into KgRuleSigvalMap
+	 * 
+	 * @return count of records inserted
+	 */
+	public static int calculateSigVals() {
+		Session session = HibernateUtils.getSessionFactory().openSession();
+		session.beginTransaction();
+		// truncate the table
+		Query query = session.createQuery("delete from KgRuleSigvalMap");
+		query.executeUpdate();
+		// insert the records
+		StringBuilder insQuery = new StringBuilder();
+		insQuery.append(" insert into kg_rule_sigval_map (rsm_rl_id, rsm_sigval) ");
+		insQuery.append(" SELECT r1.rl_id, CAST(r1.rl_propfreq / (SELECT ");
+		insQuery.append(" SUM(r2.rl_propfreq) FROM kg_rule r2, kg_rule_map rm2, triple_pattern_map tpm2 ");
+		insQuery.append(" WHERE r2.rl_id = rm2.rm_rl_id AND rm2.rm_tpm_id = tpm2.tpm_id ");
+		insQuery.append(" AND tpm1.TPM_ID = tpm2.TPM_ID) AS DECIMAL (10 , 8 )) AS sigVal ");
+		insQuery.append(" FROM kg_rule r1, kg_rule_map rm1, triple_pattern_map tpm1 ");
+		insQuery.append(" WHERE r1.rl_id = rm1.rm_rl_id AND rm1.rm_tpm_id = tpm1.tpm_id; ");
+		query = session.createSQLQuery(insQuery.toString());
+		int insCount = query.executeUpdate();
+		session.getTransaction().commit();
+		session.close();
+		return insCount;
 	}
 
 }

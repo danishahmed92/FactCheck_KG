@@ -16,6 +16,13 @@ public class TestRule {
 	}
 
 	// Get select query
+	/**
+	 * Method to fetch the specific "Select" query string for the current TestRule
+	 * 
+	 * @param index
+	 *            - index for the index
+	 * @return - Query fragment String
+	 */
 	public String getSelQuery(int index) {
 		StringBuilder queryStr = new StringBuilder();
 		queryStr.append("SELECT (count(1) as ?cVal").append(index);
@@ -24,27 +31,50 @@ public class TestRule {
 		queryStr.append(" ").append(encloseObj(objURI)).append(" . }");
 		return queryStr.toString();
 	}
-	
-	public static String encloseObj(String objURI) {
-		if(objURI.matches(".*http.*:\\/\\/.*")) {
-			return "<"+objURI+">";
-		}
-		else
-			return "\""+objURI+"\"";
+
+	/**
+	 * Method to enclose the Object data based on it being a URI or value
+	 * 
+	 * @param objData
+	 *            - object data
+	 * @return - objectData enclosed in <> or ""
+	 */
+	public static String encloseObj(String objData) {
+		if (objData.matches(".*http.*:\\/\\/.*")) {
+			return "<" + objData + ">";
+		} else
+			return "\"" + objData + "\"";
 	}
 
 	// Get bind phrase
+	/**
+	 * Method to get the Specific Bind phrase for confidence value calculation for
+	 * current TestRule
+	 * 
+	 * @param index
+	 *            - current index
+	 * @return - Query fragment String
+	 */
 	public String getBindPhrase(int index) {
 		StringBuilder queryStr = new StringBuilder();
 		queryStr.append(" bind( if(?cVal").append(index).append("> 0, 1, -1) as ?result").append(index).append(" ) .");
 		return queryStr.toString();
 	}
+
 	// Get calc phrase
+	/**
+	 * Method to fetch the query calculation part for the specific test rule
+	 * 
+	 * @param index
+	 *            - current index
+	 * @return - Query fragment string
+	 */
 	public String getCalcPhrase(int index) {
 		StringBuilder queryStr = new StringBuilder();
 		queryStr.append(" ?result").append(index).append("*").append(sigVal).append(" ");
 		return queryStr.toString();
 	}
+
 	// Getter and Setters
 	public String getSubjURI() {
 		return subjURI;
