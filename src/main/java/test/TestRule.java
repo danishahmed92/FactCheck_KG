@@ -45,7 +45,7 @@ public class TestRule {
 		if (objData.matches(Constants.URI_REGEX)) {
 			return "<" + objData + ">";
 		} else
-			return "\"" + objData + "\"";
+			return "\"" + objData.replace("\n", "") + "\"";
 	}
 
 	// Get bind phrase
