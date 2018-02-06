@@ -200,10 +200,10 @@ public class RulesExtraction {
                     extractedFeatures.setRule1PropertiesValuesMap(subjectsPropertiesValuesMap);
 
                     PersistenceProvider.persistRules(arrRule1, subPropMap, subjectsPropertiesValuesMap);
-                } else {
+                } /*else {
                     extractedFeatures.setRule1PropertiesValuesMap(queryCache.get(currentQuery));
                     PersistenceProvider.persistRules(arrRule1, subPropMap, queryCache.get(currentQuery));
-                }
+                }*/
                 System.out.println("Rule 1 finished");
 
                 /* Step 5 (RULE #2)*/
@@ -219,11 +219,11 @@ public class RulesExtraction {
                     extractedFeatures.setRule2PropertiesValuesMap(objectsPropertiesValuesMap);
 
                     PersistenceProvider.persistRules(arrRule2, objPropMap, objectsPropertiesValuesMap);
-                } else {
+                } /*else {
                     extractedFeatures.setRule2PropertiesValuesMap(queryCache.get(currentQuery));
 
                     PersistenceProvider.persistRules(arrRule2, objPropMap, queryCache.get(currentQuery));
-                }
+                }*/
                 System.out.println("Rule 2 finished");
 
                 /* Step 6 (RULE #3)*/
@@ -242,10 +242,16 @@ public class RulesExtraction {
                     queryCache.put(currentQuery, subPropertiesValuesMap);
                     extractedFeatures.setRule3SubPropertiesValuesMap(subPropertiesValuesMap);
 
+                    String[] arrRule3Sub = {"U", predicate.getURI(), "K"};
+                    PersistenceProvider.persistRules(arrRule3Sub, propertiesSubRankedMap, subPropertiesValuesMap);
+
                     extractedFeatures.setRule3ObjPropertiesRankedMap(propertiesObjRankedMap);
                     Map<String, Map<String, Integer>> objPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_3_OBJ, propertiesObjRankedMap, predicateUri, objectUri);
                     queryCache.put(currentQuery, objPropertiesValuesMap);
                     extractedFeatures.setRule3ObjPropertiesValuesMap(objPropertiesValuesMap);
+
+                    String[] arrRule3Obj = {"K", predicate.getURI(), "U"};
+                    PersistenceProvider.persistRules(arrRule3Obj, propertiesObjRankedMap, objPropertiesValuesMap);
                 }
                 System.out.println("Rule 3 finished");
 
