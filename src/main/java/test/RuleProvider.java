@@ -69,8 +69,8 @@ public class RuleProvider {
 		List<Object[]> res = null;
 		Query query = session.createSQLQuery(queryStr).
 				setParameter("subj", params[0]).
-				setParameter("pred", params[0]).
-				setParameter("obj", params[0]);
+				setParameter("pred", params[1]).
+				setParameter("obj", params[2]);
 		res = query.list();
 		return res;
 	}
