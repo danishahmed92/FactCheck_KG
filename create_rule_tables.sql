@@ -1,3 +1,8 @@
+-- Dumping database structure for kg_mp
+DROP DATABASE IF EXISTS `kg_mp`;
+CREATE DATABASE IF NOT EXISTS `kg_mp` /*!40100 DEFAULT CHARACTER SET latin1 */;
+USE `kg_mp`;
+
 CREATE TABLE `kg_mp`.`triple_pattern_map` (
   `TPM_ID` INT NOT NULL AUTO_INCREMENT,
   `TPM_SUBJ` VARCHAR(300) NULL,

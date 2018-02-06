@@ -94,7 +94,7 @@ public class RulesExtraction {
 
     public static void main(String[] args) {
         try {
-            filesCrawler(Paths.get(Config.configInstance.trainDataPath + "/correct/award"));
+            filesCrawler(Paths.get(Config.configInstance.trainDataPath + "/correct/"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,11 +114,10 @@ public class RulesExtraction {
                     System.out.println(file.getFileName().toString());
                     try {
                         saveEntryToDB = true;
-                        ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + file.getFileName().toString());
+                        System.out.println(String.valueOf(file.toAbsolutePath()));
+                        ExtractedFeatures extractedFeatures = extractRulesForRDFFile(String.valueOf(file.toAbsolutePath()));
 
                         TimeUnit.SECONDS.sleep(1);
-//                        if (saveEntryToDB)
-//                            Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", file.getFileName().toString());
                     } catch (IOException ignore) {
                         // don't index files that can't be read.
                     	ignore.printStackTrace();
@@ -133,13 +132,14 @@ public class RulesExtraction {
         } else {
             System.out.println(path.getFileName().toString());
             try {
-                ExtractedFeatures extractedFeatures = extractRulesForRDFFile(Config.configInstance.trainDataPath + "/correct/award/" + path.getFileName().toString());
+                ExtractedFeatures extractedFeatures = extractRulesForRDFFile(String.valueOf(path.toAbsolutePath()));
 //                if (saveEntryToDB)
 //                    Database.saveExtractedFeaturesObjToDB(extractedFeatures, conn, "award", path.getFileName().toString());
             } catch (JWNLException e) {
                 e.printStackTrace();
             }
         }
+        System.out.println(PersistenceProvider.calculateSigVals());
     }
 
     public static Map<String, Integer> setThresholdMap(Map<String, Integer> map) {
@@ -348,9 +348,11 @@ public class RulesExtraction {
                     break;
                 case RULE_3_SUB:
                     propertyValuesMap = rule3_1SubjectPropertyValuesFreq(predicateUri, propertyUri);
+                    System.out.println("RULE_3_SUB property URI\t :" + propertyUri);
                     break;
                 case RULE_3_OBJ:
                     propertyValuesMap = rule3_1ObjectPropertyValuesFreq(predicateUri, propertyUri);
+                    System.out.println("RULE_3_OBJ property URI\t :" + propertyUri);
                     break;
             }
 
@@ -384,6 +386,8 @@ public class RulesExtraction {
                 if (counter < threshold) {
                     reducedPropertyValuesMap.put(pair.getKey().toString(), Integer.parseInt(pair.getValue().toString()));
                     counter++;
+                } else {
+                    break;
                 }
                 it.remove(); // avoids a ConcurrentModificationException
             }
