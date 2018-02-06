@@ -38,11 +38,13 @@ public class ConfidenceProvider {
 		int ruleSize = rules.size();
 		// Since the query seems too large, divide it into fragments
 		if (ruleSize > ruleLim) {
+			
 			while (true) {
 				if (startInd >= ruleSize)
 					break;
 				if (endIndex > ruleSize)
 					endIndex = ruleSize;
+				System.out.println("Calculating confidence value from: "+startInd+" to "+endIndex+" out of "+ruleSize);
 				cfVal += executeResultQuery(generateQuery(rules.subList(startInd, endIndex)));
 				startInd += ruleLim;
 				endIndex += ruleLim;
