@@ -179,11 +179,11 @@ public class RulesExtraction {
         ExtractedFeatures extractedFeatures = new ExtractedFeatures(subject, predicate, object);
 
         /* Step 3 (RULE #0) */
-        Map<String, Double> semanticSubjectPropertiesMap = rule0SemanticSubjectProperties(subject, object, predicate);
+//        Map<String, Double> semanticSubjectPropertiesMap = rule0SemanticSubjectProperties(subject, object, predicate);
         /* if provided resource has properties in sparql */
-        if (semanticSubjectPropertiesMap.size() != 0) {
-            extractedFeatures.setSemanticSubjectProperty(semanticSubjectPropertiesMap.keySet().toArray()[semanticSubjectPropertiesMap.size() - 1].toString(),
-                    Double.parseDouble(semanticSubjectPropertiesMap.values().toArray()[semanticSubjectPropertiesMap.size() - 1].toString()));
+//        if (semanticSubjectPropertiesMap.size() != 0) {
+//            extractedFeatures.setSemanticSubjectProperty(semanticSubjectPropertiesMap.keySet().toArray()[semanticSubjectPropertiesMap.size() - 1].toString(),
+//                    Double.parseDouble(semanticSubjectPropertiesMap.values().toArray()[semanticSubjectPropertiesMap.size() - 1].toString()));
 
             List<String> resourceAvailability = checkResourceAvailability(subjectUri, predicateUri);
             if (resourceAvailability.size() != 0) {
@@ -262,11 +262,11 @@ public class RulesExtraction {
                 System.out.println("Resource unavailable w.r.t object in Dbpedia sparql: " + subjectUri + ",\t" + predicateUri);
                 System.out.println();
             }
-        } else {
-            saveEntryToDB = false;
-            System.out.println("Resource unavailable in Dbpedia sparql: " + subjectUri);
-            System.out.println();
-        }
+//        } else {
+//            saveEntryToDB = false;
+//            System.out.println("Resource unavailable in Dbpedia sparql: " + subjectUri);
+//            System.out.println();
+//        }
         return null;
     }
 

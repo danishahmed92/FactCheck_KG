@@ -107,4 +107,6 @@ buildNumber.properties
 # data folder
 data/
 
+src/main/resource
+
 # End of https://www.gitignore.io/api/java,maven,intellij

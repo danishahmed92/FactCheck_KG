@@ -308,7 +308,7 @@ public class Queries {
 
                 String colValue = soln.get(column).toString();
                 Integer freq = soln.getLiteral("freq").getInt();
-                if (colValue != null)
+                if (colValue != null && colValue.length() < 500)
                     result.put(colValue, freq);
             }
             qExec.close();

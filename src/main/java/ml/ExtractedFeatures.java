@@ -53,8 +53,8 @@ public class ExtractedFeatures implements Serializable {
         predicateLabel = predicate.getLocalName();
         subjectLabel = subject.langLabelsMap.get("en");
 
-        objectLabelVariants = labelsFiltration.altLabelVariantsSimilarityBased(object, "en");
-        subjectLabelVariants = labelsFiltration.altLabelVariantsSimilarityBased(subject, "en");
+//        objectLabelVariants = labelsFiltration.altLabelVariantsSimilarityBased(object, "en");
+//        subjectLabelVariants = labelsFiltration.altLabelVariantsSimilarityBased(subject, "en");
     }
 
     /**
