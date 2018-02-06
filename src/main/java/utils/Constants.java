@@ -20,4 +20,6 @@ public class Constants {
 
     public static final String RESOURCE_DIRECTORY = "src/main/resources/";
     public static final String CONFIG_FILE = "factCheck.ini";
+    
+    public static final String URI_REGEX = "^http(([^:\\/?#]+):)?(\\/\\/([^\\/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?$";
 }

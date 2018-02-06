@@ -1,5 +1,7 @@
 package test;
 
+import utils.Constants;
+
 public class TestRule {
 
 	private String subjURI;
@@ -40,7 +42,7 @@ public class TestRule {
 	 * @return - objectData enclosed in <> or ""
 	 */
 	public static String encloseObj(String objData) {
-		if (objData.matches(".*http.*:\\/\\/.*")) {
+		if (objData.matches(Constants.URI_REGEX)) {
 			return "<" + objData + ">";
 		} else
 			return "\"" + objData + "\"";

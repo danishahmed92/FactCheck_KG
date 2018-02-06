@@ -16,6 +16,7 @@ import bean.KgRule;
 import bean.KgRuleMap;
 import bean.KgRulePropvalBucket;
 import bean.TriplePatternMap;
+import utils.Constants;
 import utils.HibernateUtils;
 
 /**
@@ -245,8 +246,13 @@ public class PersistenceProvider {
 	 * @return - last element of the URI
 	 */
 	public static String fetchPropLabel(String propVal) {
-		String[] words = propVal.split("[\\/]");
-		return words[words.length - 1];
+		if(propVal.matches(Constants.URI_REGEX))
+		{
+			String[] words = propVal.split("[\\/]");
+			return words[words.length - 1];
+		}
+		else
+			return propVal;
 	}
 
 	/**
