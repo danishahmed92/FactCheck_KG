@@ -16,9 +16,11 @@ import org.hibernate.Session;
 public class FactChecker {
 	
 	public static Map<String, Double> cfValCacheMap;
+	public static Map<String, String> resCache;
 	private List<String> formattedResult;
 	static {
 		cfValCacheMap = new HashMap<>();
+		resCache = new HashMap<>();
 	}
 	
 	public FactChecker() {
@@ -76,10 +78,10 @@ public class FactChecker {
 			tempKey = getCNJStr(tempRes, caseArr[i]);
 			tempVal = cfValCacheMap.get(tempKey);
 			if(tempVal == null) {
-				tempVal = getCaseCFVal(tempRes , caseArr[i], session);
-				cfValCacheMap.put(tempKey, tempVal);
+				tempVal = getCaseCFVal(tempRes , caseArr[i], tempKey, session);
 			}else {
 				cacheCount++;
+				formattedResult.add(resCache.get(tempKey));
 			}
 			/*if(tempVal == -10) {
 				cfVal = -10d;
@@ -101,18 +103,22 @@ public class FactChecker {
 		return res;
 	}
 	
-	public double getCaseCFVal(String source, String[] caseTriple, Session session) {
+	public double getCaseCFVal(String source, String[] caseTriple, String tempKey, Session session) {
 		double cfVal;
 		List<TestRule> rules = new ArrayList<>();
 		rules.addAll(RuleProvider.fetchRuleData(source, caseTriple, session));
+		String frmStrRes;
 		if(rules.size()>0) {
 			cfVal = ConfidenceProvider.getConfidenceValue(rules);
-			formattedResult.add(String.valueOf(cfVal));
+			frmStrRes = String.valueOf(cfVal);
 		}
 		else {
 			cfVal = -0.54;
-			formattedResult.add("NA");
+			frmStrRes = "NA";
 		}
+		formattedResult.add(frmStrRes);
+		cfValCacheMap.put(tempKey, cfVal);
+		resCache.put(tempKey, frmStrRes);
 		return cfVal;
 	}
 	
