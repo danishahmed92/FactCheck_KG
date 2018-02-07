@@ -15,12 +15,12 @@ import rita.wordnet.jwnl.JWNLException;
 import test.FactChecker;
 import utils.HibernateUtils;
 
+import static ml.ExtractedFeatures.subjectUri;
 import static ml.RulesExtraction.getTriples;
 
 public class Main {
 
 	public static Session session = HibernateUtils.getSessionFactory().openSession();
-	public static PrintWriter out = null;
 	/*
 	 * Configuration of Hibernate and test with DB
 	 *
@@ -31,17 +31,10 @@ public class Main {
 		session.beginTransaction();
 
 		try {
-			out = new PrintWriter(new OutputStreamWriter(
-					new BufferedOutputStream(new FileOutputStream("wrong_range_award.txt")), "UTF-8"));
 			filesCrawler(Paths.get(Config.configInstance.testDataPath + "/wrong/range/award"));
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-            if(out != null) {
-                out.flush();
-                out.close();
-            }
-        }
+		}
 
 		session.getTransaction().commit();
 		session.close();
@@ -70,13 +63,19 @@ public class Main {
 						String[] triple = { subjectUri, predicateUri, objectUri };
 						double cfVal = factChecker.getFactCFVal(triple, session);
 
-						out.println(fileName + "\t"
-								+ subjectUri + "\t"
-								+ predicateUri + "\t"
-								+ objectUri + "\t"
-								+ cfVal);
+						String fileContent = fileName + "\t"
+                                + subjectUri + "\t"
+                                + predicateUri + "\t"
+                                + objectUri + "\t"
+                                + cfVal
+                                + "\n";
+						writeToFile("wrong_range_award.txt", fileContent);
 
-						System.out.println(fileName + ": " + cfVal);
+						System.out.println(fileName + "\t"
+                                + subjectUri + "\t"
+                                + predicateUri + "\t"
+                                + objectUri + "\t"
+                                + cfVal);
 					} catch (IOException ignore) {
 						// don't index files that can't be read.
 						ignore.printStackTrace();
@@ -86,4 +85,13 @@ public class Main {
 			});
 		}
 	}
+
+	public static void writeToFile(String fileName, String content) throws IOException {
+        File writeFile = new File(fileName);
+
+        FileWriter fileWriter = new FileWriter(writeFile, true);
+        BufferedWriter bufferFileWriter  = new BufferedWriter(fileWriter);
+        fileWriter.append(content);
+        bufferFileWriter.close();
+    }
 }
