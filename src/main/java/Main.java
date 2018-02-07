@@ -31,7 +31,7 @@ public class Main {
 		session.beginTransaction();
 
 		try {
-			filesCrawler(Paths.get(Config.configInstance.testDataPath + "/wrong/range/award"));
+			filesCrawler(Paths.get(Config.configInstance.testDataPath + "/wrong/range/spouse"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -58,7 +58,13 @@ public class Main {
 						String subjectUri = FactCheckResource.getDBpediaUri(tripleExtractor.subject);
 						String predicateUri = tripleExtractor.predicate.getURI();
 						String objectUri = FactCheckResource.getDBpediaUri(tripleExtractor.object);
-
+						//Check for empty content
+						boolean cond1 = subjectUri.trim().length()==0;
+						boolean cond2 = predicateUri.trim().length()==0;
+						boolean cond3 = objectUri.trim().length()==0;
+						if(cond1 || cond2 || cond3) {
+							return FileVisitResult.CONTINUE;
+						}
 						FactChecker factChecker = new FactChecker();
 						String[] triple = { subjectUri, predicateUri, objectUri };
 						double cfVal = factChecker.getFactCFVal(triple, session);
@@ -69,7 +75,7 @@ public class Main {
                                 + objectUri + "\t"
                                 + cfVal
                                 + "\n";
-						writeToFile("wrong_range_award.txt", fileContent);
+						writeToFile("wrong_range_spouse.txt", fileContent);
 
 						System.out.println(fileName + "\t"
                                 + subjectUri + "\t"

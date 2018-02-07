@@ -127,7 +127,7 @@ public class ConfidenceProvider {
 		// Remote execution.
 		try (QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query)) {
 			// Set the DBpedia specific timeout.
-			((QueryEngineHTTP) qexec).addParam("timeout", "30000");
+			((QueryEngineHTTP) qexec).addParam("timeout", "3000000");
 
 			// Execute.
 			ResultSet rs = qexec.execSelect();
