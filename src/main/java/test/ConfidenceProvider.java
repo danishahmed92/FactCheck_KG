@@ -20,7 +20,7 @@ import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
  *
  */
 public class ConfidenceProvider {
-	public static int ruleLim = 120;
+	public static int ruleLim = 10;
 
 	// Method to accept a testRule object and return count of records fetched
 	/**
@@ -44,7 +44,7 @@ public class ConfidenceProvider {
 					break;
 				if (endIndex > ruleSize)
 					endIndex = ruleSize;
-				System.out.println("Calculating confidence value from: "+startInd+" to "+endIndex+" out of "+ruleSize);
+				//System.out.println("Calculating confidence value from: "+startInd+" to "+endIndex+" out of "+ruleSize);
 				cfVal += executeResultQuery(generateQuery(rules.subList(startInd, endIndex)));
 				startInd += ruleLim;
 				endIndex += ruleLim;
