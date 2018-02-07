@@ -16,8 +16,13 @@ import org.hibernate.Session;
 public class FactChecker {
 	
 	public static Map<String, Double> cfValCacheMap;
+	private List<String> formattedResult;
 	static {
 		cfValCacheMap = new HashMap<>();
+	}
+	
+	public FactChecker() {
+		formattedResult = new ArrayList<>();
 	}
 	/**
 	 * Method to retrieve confidence value of a triple
@@ -100,11 +105,25 @@ public class FactChecker {
 		double cfVal;
 		List<TestRule> rules = new ArrayList<>();
 		rules.addAll(RuleProvider.fetchRuleData(source, caseTriple, session));
-		if(rules.size()>0)
+		if(rules.size()>0) {
 			cfVal = ConfidenceProvider.getConfidenceValue(rules);
-		else
+			formattedResult.add(String.valueOf(cfVal));
+		}
+		else {
 			cfVal = -0.54;
+			formattedResult.add("NA");
+		}
 		return cfVal;
 	}
+	
+	//Getter and Setter
+	public List<String> getFormattedResult() {
+		return formattedResult;
+	}
+	public void setFormattedResult(List<String> formattedResult) {
+		this.formattedResult = formattedResult;
+	}
+	
+	
 
 }
