@@ -91,7 +91,19 @@ public class FactChecker {
 			cfVal+=tempVal;
 		}
 		System.out.println("Cache called for fact: "+cacheCount+" times.");
-		return cfVal;
+		//return cfVal;
+		//Calculate normalized value
+		double nVal = 0;
+		int totCount = 0;
+		for(String entry: formattedResult) {
+			if(!entry.equalsIgnoreCase("NA")) {
+				nVal+=Double.valueOf(entry);
+				totCount++;
+			}
+		}
+		if(totCount==0)
+			nVal = -10;
+		return nVal/totCount;
 	}
 	
 	public static String getCNJStr(String resource, String[] arr) {
