@@ -35,7 +35,7 @@ public class Main {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		System.out.println("Processing finished.");
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -67,7 +67,7 @@ public class Main {
 						}
 						FactChecker factChecker = new FactChecker();
 						String[] triple = { subjectUri, predicateUri, objectUri };
-						double cfVal = factChecker.getFactCFVal(triple, session);
+						double cfVal = factChecker.getFactCFValAdv(triple, session);
 
 						String fileContent = fileName + "\t"
                                 + subjectUri + "\t"

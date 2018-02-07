@@ -122,7 +122,6 @@ public class ConfidenceProvider {
 	 */
 	public static double executeResultQuery(String queryStr) {
 		double res = 0;
-		System.out.println(queryStr);
 		Query query = QueryFactory.create(queryStr);
 		// Remote execution.
 		try (QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query)) {
@@ -139,6 +138,7 @@ public class ConfidenceProvider {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.out.println(queryStr);
 		}
 		return res;
 	}
