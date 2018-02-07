@@ -63,13 +63,15 @@ public class FactChecker {
 		String[] sourceArr = {triple[0], triple[2],triple[0], triple[2]};
 		Double tempVal;
 		String tempKey;
+		String tempRes;
 		Double[] cfVals = new Double[4];
 		for(int i=0;i<caseArr.length;i++) {
 			//get cached value
-			tempKey = getCNJStr(caseArr[i]);
+			tempRes = sourceArr[i];
+			tempKey = getCNJStr(tempRes, caseArr[i]);
 			tempVal = cfValCacheMap.get(tempKey);
 			if(tempVal == null) {
-				tempVal = getCaseCFVal(sourceArr[i], caseArr[i], session);
+				tempVal = getCaseCFVal(tempRes , caseArr[i], session);
 				cfValCacheMap.put(tempKey, tempVal);
 			}else {
 				cacheCount++;
@@ -85,8 +87,9 @@ public class FactChecker {
 		return cfVal;
 	}
 	
-	public static String getCNJStr(String[] arr) {
+	public static String getCNJStr(String resource, String[] arr) {
 		String res = new String();
+		res+=resource;
 		for(String entry: arr) {
 			res+=entry;
 		}
