@@ -205,6 +205,11 @@ public class RulesExtraction {
                     PersistenceProvider.persistRules(arrRule1, subPropMap, queryCache.get(currentQuery));
                 }*/
                 System.out.println("Rule 1 finished");
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 /* Step 5 (RULE #2)*/
                 Map<String, Integer> objectsPropertiesMap = rule2ObjectsPropertiesIntersection(subjectUri, predicateUri);
@@ -225,6 +230,11 @@ public class RulesExtraction {
                     PersistenceProvider.persistRules(arrRule2, objPropMap, queryCache.get(currentQuery));
                 }*/
                 System.out.println("Rule 2 finished");
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 /* Step 6 (RULE #3)*/
                 Map<String, Integer> propertiesSubjectRankedMap = rule3SubjectPropertiesRanked(predicateUri);
@@ -244,6 +254,12 @@ public class RulesExtraction {
 
                     String[] arrRule3Sub = {"U", predicate.getURI(), "K"};
                     PersistenceProvider.persistRules(arrRule3Sub, propertiesSubRankedMap, subPropertiesValuesMap);
+
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
                     extractedFeatures.setRule3ObjPropertiesRankedMap(propertiesObjRankedMap);
                     Map<String, Map<String, Integer>> objPropertiesValuesMap = extractPropertyValues(RuleNumber.RULE_3_OBJ, propertiesObjRankedMap, predicateUri, objectUri);
@@ -348,19 +364,19 @@ public class RulesExtraction {
                     break;
                 case RULE_3_SUB:
                     propertyValuesMap = rule3_1SubjectPropertyValuesFreq(predicateUri, propertyUri);
-                    System.out.println("RULE_3_SUB property URI\t :" + propertyUri);
+//                    System.out.println("RULE_3_SUB property URI\t :" + propertyUri);
                     break;
                 case RULE_3_OBJ:
                     propertyValuesMap = rule3_1ObjectPropertyValuesFreq(predicateUri, propertyUri);
-                    System.out.println("RULE_3_OBJ property URI\t :" + propertyUri);
+//                    System.out.println("RULE_3_OBJ property URI\t :" + propertyUri);
                     break;
             }
 
-            try {
-                TimeUnit.SECONDS.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                TimeUnit.SECONDS.sleep(1);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
 
             int threshold = (int) Math.sqrt(propertyValuesMap.size());
             int counter = 0;

@@ -55,7 +55,7 @@ public class Queries {
 
     public static final String RULE_2_GRANULAR = "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
             "SELECT ?o (count(?o) as ?freq) WHERE {\n" +
-            "?subj %s ?o .\n" +
+            "?o %s ?subj .\n" +
             "filter (?subj = ?obj) {\n" +
             "SELECT ?obj WHERE { \n" +
             "        ?s %s ?obj .\n" +
@@ -108,7 +108,7 @@ public class Queries {
 
     public static final String RULE_3_OBJ_GRANULAR = "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
             "SELECT ?o (count(?o) as ?freq) WHERE {\n" +
-            "?subj %s ?o .\n" +
+            "?o %s ?subj .\n" +
             "filter (?subj = ?obj) {\n" +
             "SELECT ?obj WHERE { \n" +
             "        ?s %s ?obj .\n" +
