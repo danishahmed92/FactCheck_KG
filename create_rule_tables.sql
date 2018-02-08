@@ -103,3 +103,17 @@ CHANGE COLUMN `pr_label` `pr_label` VARCHAR(500) NULL DEFAULT NULL ;
 
 ALTER TABLE `kg_mp`.`kg_rule` 
 CHANGE COLUMN `rl_propval` `rl_propval` VARCHAR(500) NULL DEFAULT NULL ;
+
+
+SET collation_connection = 'utf8_general_ci';
+ 
+ALTER DATABASE kg_mp CHARACTER SET utf8 COLLATE utf8_general_ci;
+ 
+ALTER TABLE kg_pred CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+ALTER TABLE kg_pred_bucket CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+ALTER TABLE kg_pred_map CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+ALTER TABLE kg_rule CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+ALTER TABLE kg_rule_map CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+ALTER TABLE kg_rule_propval_bucket CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+ALTER TABLE kg_rule_sigval_map CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+ALTER TABLE triple_pattern_map CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;

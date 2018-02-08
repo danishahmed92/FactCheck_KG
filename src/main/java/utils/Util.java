@@ -1,6 +1,7 @@
 package utils;
 
 import org.apache.jena.base.Sys;
+import test.ConfidenceProvider;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 public class Util {
     /**
      *
-     * @param wordSimilarityMap
+     * @param wordSimilarityMap arrange this map list according to score of values (lowest to highest)
      * @return sorted map
      */
     public static Map<String, Double> sortMapByValue(Map<String, Double> wordSimilarityMap) {
@@ -23,6 +24,11 @@ public class Util {
                         Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
+    /**
+     *
+     * @param arr elements
+     * @return mean amongst array elements
+     */
     public static double mean(Object[] arr) {
         double sum = 0.0;
         for(Object i : arr)
@@ -30,6 +36,11 @@ public class Util {
         return sum / arr.length;
     }
 
+    /**
+     *
+     * @param arr elements
+     * @return variance amongst array elements
+     */
     public static double variance(Object[] arr) {
         double mean = mean(arr);
         double temp = 0;
@@ -38,85 +49,51 @@ public class Util {
         return temp / (arr.length - 1);
     }
 
+    /**
+     *
+     * @param arr elements
+     * @return standard deviation amongst array elements
+     */
     public static double standardDeviation(Object[] arr) {
         return Math.sqrt(variance(arr));
     }
 
+    /**
+     *
+     * @param confidenceValueList list of confidence values of triples that you need to evaluate
+     * @param threshold threshold that you calculated while training your dataset
+     */
+    public static void evaluateFactsFromListOfConfidence(ArrayList<String> confidenceValueList, Double threshold) {
+        int falseCount = 0;
+        int trueCount = 0;
+        Double cv;
+        Double diff;
+        for (int i = 0; i < confidenceValueList.size(); i++) {
+            cv = Double.parseDouble(confidenceValueList.get(i));
+            if (cv <= threshold) {
+                if (cv < -1.0)
+                    cv = -1.0;
+                diff = Math.abs(threshold - cv);
+                System.out.println("False:\t" + cv + "\t" + diff + "\t" + ((diff+0.2)*100));
+                falseCount++;
+            } else {
+                if (cv > 1.0)
+                    cv = 1.0;
+                diff = Math.abs(cv - (threshold));
+                System.out.println("True:\t" + cv + "\t" + diff + "\t" + ((diff+0.8)*100));
+                trueCount++;
+            }
+        }
+        System.out.println("false count:\t" + falseCount);
+        System.out.println("true count:\t" + trueCount);
+        System.out.println();
+    }
+
     public static void main(String[] args) throws IOException {
-        System.out.println("wrong/range/award");
-        try (BufferedReader br = new BufferedReader(new FileReader("wrong_range_spouse.txt"))) {
-            String line;
-            ArrayList<String> confidenceValue = new ArrayList<>();
-            while ((line = br.readLine()) != null) {
-                String[] splitLine = line.split("\\s+");
-                confidenceValue.add(splitLine[4]);
-            }
 
-            System.out.println(confidenceValue);
-
-            Double standardDeviation = standardDeviation(confidenceValue.toArray());
-            Double variance = variance(confidenceValue.toArray());
-            Double mean = mean(confidenceValue.toArray());
-            System.out.println("mean:\t" + mean);
-            System.out.println("standard deviation:\t" + standardDeviation);
-            System.out.println("variance:\t" + variance);
-
-            int falseCount = 0;
-            int trueCount = 0;
-            Double cv = 0.0;
-
-            for (int i = 0; i < confidenceValue.size(); i++) {
-                cv = Double.parseDouble(confidenceValue.get(i));
-                if (cv <= -2.215678593775) {
-                    falseCount++;
-                } else {
-                    trueCount++;
-                }
-            }
-            System.out.println("false count:\t" + falseCount);
-            System.out.println("true count:\t" + trueCount);
-            System.out.println();
-        }
-
-        System.out.println("correct/award");
-        try (BufferedReader br = new BufferedReader(new FileReader("correct_range_spouse.txt"))) {
-            String line;
-            ArrayList<String> confidenceValue = new ArrayList<>();
-            while ((line = br.readLine()) != null) {
-                String[] splitLine = line.split("\\s+");
-                confidenceValue.add(splitLine[4]);
-            }
-
-            System.out.println(confidenceValue);
-
-            Double standardDeviation = standardDeviation(confidenceValue.toArray());
-            Double variance = variance(confidenceValue.toArray());
-            Double mean = mean(confidenceValue.toArray());
-            System.out.println("mean:\t" + mean);
-            System.out.println("standard deviation:\t" + standardDeviation);
-            System.out.println("variance:\t" + variance);
-
-            int falseCount = 0;
-            int trueCount = 0;
-            Double cv = 0.0;
-
-            for (int i = 0; i < confidenceValue.size(); i++) {
-                cv = Double.parseDouble(confidenceValue.get(i));
-                if (cv <= -2.1339) {
-                    falseCount++;
-                } else {
-                    trueCount++;
-                }
-            }
-            System.out.println("false count:\t" + falseCount);
-            System.out.println("true count:\t" + trueCount);
-        }
-
-
-        /*System.out.println("calculating bias factor for non matching rules.");
         try {
-            BufferedReader brC = new BufferedReader(new FileReader("correct_award_train_threshold.txt"));
-            BufferedReader brW = new BufferedReader(new FileReader("wrong_range_award_train_threshold.txt"));
+            BufferedReader brC = new BufferedReader(new FileReader("correct_award.txt"));
+            BufferedReader brW = new BufferedReader(new FileReader("wrong_range_award.txt"));
 
             String lineC;
             ArrayList<String> confidenceValueC = new ArrayList<>();
@@ -132,19 +109,16 @@ public class Util {
                 confidenceValueW.add(splitLine[4]);
             }
 
-            ArrayList<Double> meanCV = new ArrayList<>();
-            for (int i = 0; i < confidenceValueC.size(); i++) {
-                meanCV.add(Double.parseDouble(confidenceValueC.get(i)) + Double.parseDouble(confidenceValueW.get(i)) / 2);
-            }
-            Double standardDeviation = standardDeviation(meanCV.toArray());
-            Double variance = variance(meanCV.toArray());
-            Double mean = mean(meanCV.toArray());
-            System.out.println("mean:\t" + mean);
-            System.out.println("standard deviation:\t" + standardDeviation);
-            System.out.println("variance:\t" + variance);
+            Double threshold = ConfidenceProvider.getConfidenceThreshold("correct_award_train_threshold.txt", "wrong_range_award_train_threshold.txt");
+
+            System.out.println("wrong/range/award");
+            evaluateFactsFromListOfConfidence(confidenceValueC, threshold);
+
+            System.out.println("correct/award");
+            evaluateFactsFromListOfConfidence(confidenceValueW, threshold);
         } catch (IOException ignore) {
             // don't index files that can't be read.
             ignore.printStackTrace();
-        }*/
+        }
     }
 }

@@ -1,5 +1,9 @@
 package test;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +15,7 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
+import utils.Util;
 
 /**
  * Class to implement methods that will help provide a confidence value for a
@@ -20,7 +25,7 @@ import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
  *
  */
 public class ConfidenceProvider {
-	public static int ruleLim = 10;
+	public static int ruleLim = 5;
 
 	// Method to accept a testRule object and return count of records fetched
 	/**
@@ -141,6 +146,132 @@ public class ConfidenceProvider {
 			System.out.println(queryStr);
 		}
 		return res;
+	}
+
+	public static void main(String[] args) throws IOException {
+		try {
+			BufferedReader brC = new BufferedReader(new FileReader("correct_award_train_threshold.txt"));
+			BufferedReader brW = new BufferedReader(new FileReader("wrong_range_award_train_threshold.txt"));
+
+			String lineC;
+			ArrayList<String> confidenceValueC = new ArrayList<>();
+			while ((lineC = brC.readLine()) != null) {
+				String[] splitLine = lineC.split("\\s+");
+				confidenceValueC.add(splitLine[4]);
+			}
+
+			String lineW;
+			ArrayList<String> confidenceValueW = new ArrayList<>();
+			while ((lineW = brW.readLine()) != null) {
+				String[] splitLine = lineW.split("\\s+");
+				confidenceValueW.add(splitLine[4]);
+			}
+			Double threshold = getConfidenceThreshold("correct_award_train_threshold.txt", "wrong_range_award_train_threshold.txt");
+			System.out.println(threshold);
+			double correctBoost = getAboveAverageCount(confidenceValueC.toArray(), Util.mean(confidenceValueC.toArray())) / (double) confidenceValueC.size();
+			double wrongBoost = getBelowAverageCount(confidenceValueW.toArray(), Util.mean(confidenceValueW.toArray())) / (double) confidenceValueW.size();
+			System.out.println("correct set boost:\t" + correctBoost);
+			System.out.println("wrong set boost:\t" + wrongBoost);
+			System.out.println(getPercentThresholdToDisplay(correctBoost, wrongBoost, threshold));
+		} catch (IOException ignore) {
+			// don't index files that can't be read.
+			ignore.printStackTrace();
+		}
+	}
+
+	/**
+	 * This threshold will be displayed to user.
+	 * Any Value less than this is a false fact,
+	 * all above are counted as true.
+	 * @param correctMatchRatio num of elements that were above mean
+	 * @param wrongMatchRatio num of elements that were below mean
+	 * @param threshold threshold that you calculated
+	 * @return percentage of threshold
+	 */
+	public static Double getPercentThresholdToDisplay(Double correctMatchRatio, Double wrongMatchRatio, Double threshold) {
+		Double diff;
+		if (correctMatchRatio > wrongMatchRatio)
+			diff = correctMatchRatio - wrongMatchRatio;
+		else
+			diff = wrongMatchRatio - correctMatchRatio;
+
+		Double thresholdDiff = Math.abs(diff + threshold);
+		return ((diff + thresholdDiff + 0.0001)*100);
+	}
+
+	/**
+	 * Calculate 1st step value of threshold by using mean and standard deviation of both correct and wrong CV's
+	 * First calculate mean and standard deviation individually
+	 * then find centroid of individual sets using the values you got above
+	 * last, take average of both sets
+	 *
+	 * @param correctFile path of correct file that has 20% of train data
+	 * @param wrongFile path of wrong file that has 20% of train data
+	 * @return threshold
+	 */
+	public static Double getConfidenceThreshold(String correctFile, String wrongFile) {
+		try {
+			BufferedReader brC = new BufferedReader(new FileReader(correctFile));
+			BufferedReader brW = new BufferedReader(new FileReader(wrongFile));
+
+			String lineC;
+			ArrayList<String> confidenceValueC = new ArrayList<>();
+			while ((lineC = brC.readLine()) != null) {
+				String[] splitLine = lineC.split("\\s+");
+				confidenceValueC.add(splitLine[4]);
+			}
+
+			String lineW;
+			ArrayList<String> confidenceValueW = new ArrayList<>();
+			while ((lineW = brW.readLine()) != null) {
+				String[] splitLine = lineW.split("\\s+");
+				confidenceValueW.add(splitLine[4]);
+			}
+
+			Double correctMean = Util.mean(confidenceValueC.toArray());
+			Double correctStandardDeviation = Util.standardDeviation(confidenceValueC.toArray());
+
+			Double wrongMean = Util.mean(confidenceValueW.toArray());
+			Double wrongStandardDeviation = Util.standardDeviation(confidenceValueW.toArray());
+
+			Double correctSDMidPoint = (correctMean + (correctMean + correctStandardDeviation)) / 2;
+			Double wrongSDMidPoint = (wrongMean + (wrongMean + wrongStandardDeviation)) / 2;
+
+			return (correctSDMidPoint + wrongSDMidPoint) / 2;
+		}catch (IOException io) {
+			io.printStackTrace();
+		}
+		return 0.0;
+	}
+
+	/**
+	 * To be called by correct data set of CV
+	 * @param arr array of confidence values of correct train dataset
+	 * @param mean mean of above array
+	 * @return count int of matching above average
+	 */
+	public static int getAboveAverageCount(Object[] arr, Double mean) {
+		int count = 0;
+		for (Object anArr : arr) {
+			if (Double.parseDouble(String.valueOf(anArr)) >= mean)
+				count++;
+		}
+		return count;
+	}
+
+	/**
+	 * To be called by wrong data set of CV
+	 * @param arr array of confidence values of wrong train dataset
+	 * @param mean mean of above array
+	 * @return count of matching below average
+	 */
+	public static int getBelowAverageCount(Object[] arr, Double mean) {
+		int count = 0;
+		for (Object anArr : arr) {
+			if (Double.parseDouble(String.valueOf(anArr)) <= mean)
+				count++;
+		}
+		return count;
 	}
 
 }

@@ -29,7 +29,7 @@ public class Main {
 	public static BufferedWriter bufferFileWriterDR;
 
 	static {
-		writeFileDR = new File("wrong_range_award_det.tsv");
+		writeFileDR = new File("wrong_range_leader_det.tsv");
 		try {
 			fileWriterDR = new FileWriter(writeFileDR, true);
 		} catch (IOException e) {
@@ -48,7 +48,7 @@ public class Main {
 		session.beginTransaction();
 
 		try {
-			filesCrawler(Paths.get(Config.configInstance.testDataPath + "/wrong/range/award"));
+			filesCrawler(Paths.get(Config.configInstance.testDataPath + "/wrong/range/leader"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -91,7 +91,7 @@ public class Main {
 
 						String fileContent = fileName + "\t" + subjectUri + "\t" + predicateUri + "\t" + objectUri
 								+ "\t" + cfVal + "\n";
-						writeToFile("wrong_range_award.txt", fileContent);
+						writeToFile("wrong_range_leader.txt", fileContent);
 						List<String> formatedRes = factChecker.getFormattedResult();
 						String detContent = fileName + "\t" + subjectUri + "\t" + predicateUri + "\t" + objectUri
 								+ "\t" + formatedRes.get(0) + "\t" + formatedRes.get(1) + "\t" + formatedRes.get(2) + "\t" + formatedRes.get(3) + "\n";
