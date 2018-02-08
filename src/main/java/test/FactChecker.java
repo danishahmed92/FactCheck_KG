@@ -14,9 +14,17 @@ import org.hibernate.Session;
  *
  */
 public class FactChecker {
-	
+	/**
+	 * Map to store cached confidence values against unique key
+	 */
 	public static Map<String, Double> cfValCacheMap;
+	/**
+	 * Map to store formatted confidence values against unique key
+	 */
 	public static Map<String, String> resCache;
+	/**
+	 * List to store all formatted values
+	 */
 	private List<String> formattedResult;
 	static {
 		cfValCacheMap = new HashMap<>();
@@ -56,7 +64,12 @@ public class FactChecker {
 		return cfVal;
 	}
 	
-	
+	/**
+	 * Method to calculate initial confidence value for a triple. Also, cache the values to avoid repeated queries.
+	 * @param triple - triple to be evaluated
+	 * @param session - hibernate session
+	 * @return - initial confidence value
+	 */
 	public Double getFactCFValAdv(String[] triple, Session session) {
 		Double cfVal = 0d;
 		int cacheCount = 0;
@@ -105,7 +118,12 @@ public class FactChecker {
 			nVal = -10;
 		return nVal/totCount;
 	}
-	
+	/**
+	 * Method to return a unique key for a particular query combination
+	 * @param resource - resource string
+	 * @param arr - triple pattern array
+	 * @return - unique conjoined string
+	 */
 	public static String getCNJStr(String resource, String[] arr) {
 		String res = new String();
 		res+=resource;
@@ -114,7 +132,14 @@ public class FactChecker {
 		}
 		return res;
 	}
-	
+	/**
+	 * Method to fetch sum of significance values using sparql
+	 * @param source - subject of the triple
+	 * @param caseTriple - triple pattern
+	 * @param tempKey - unique key
+	 * @param session - hibernate session
+	 * @return - total significance value
+	 */
 	public double getCaseCFVal(String source, String[] caseTriple, String tempKey, Session session) {
 		double cfVal;
 		List<TestRule> rules = new ArrayList<>();
