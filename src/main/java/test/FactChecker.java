@@ -1,11 +1,17 @@
 package test;
 
+import java.io.FileNotFoundException;
+import java.nio.file.FileVisitResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
+import rdf.FactCheckResource;
+import rdf.TripleExtractor;
+
+import static ml.RulesExtraction.getTriples;
 
 /**
  * Class to provide interface for retrieving confidence value of facts
@@ -165,6 +171,87 @@ public class FactChecker {
 	}
 	public void setFormattedResult(List<String> formattedResult) {
 		this.formattedResult = formattedResult;
+	}
+
+	/**
+	 *
+	 * @param confidenceValueList list of confidence values of triples that you need to evaluate
+	 * @param threshold threshold that you calculated while training your dataset
+	 */
+	public static void evaluateFactsFromListOfConfidence(ArrayList<String> confidenceValueList
+			, Double threshold, Double correctBoost, Double wrongBoost) {
+		int falseCount = 0;
+		int trueCount = 0;
+		Double cv;
+		Double diff;
+		for (int i = 0; i < confidenceValueList.size(); i++) {
+			cv = Double.parseDouble(confidenceValueList.get(i));
+			if (cv <= threshold) {
+				if (cv < -1.0)
+					cv = -1.0;
+				diff = Math.abs(threshold - cv);
+				System.out.println("False:\t" + cv + "\t" + diff + "\t" + ((diff+wrongBoost)*100));
+				falseCount++;
+			} else {
+				if (cv > 1.0)
+					cv = 1.0;
+				diff = Math.abs(cv - (threshold));
+				System.out.println("True:\t" + cv + "\t" + diff + "\t" + ((diff+correctBoost)*100));
+				trueCount++;
+			}
+		}
+		System.out.println("false count:\t" + falseCount);
+		System.out.println("true count:\t" + trueCount);
+		System.out.println();
+	}
+
+	public static void evaluateFactFromConfidence(Double confidenceValue,
+												  Double threshold, Double correctBoost, Double wrongBoost) {
+		Double evaluationValue;
+		if (confidenceValue <= threshold) {
+			if (confidenceValue < -1.0)
+				confidenceValue = -1.0;
+			evaluationValue = Math.abs(threshold - confidenceValue);
+			evaluationValue = (evaluationValue + wrongBoost) * 100;
+			System.out.println("Threshold:\t" + ConfidenceProvider.getPercentThresholdToDisplay(correctBoost, wrongBoost, threshold));
+			System.out.println("Fact evaluated as:\tFalse");
+			System.out.println("Matching percentage:\t" + evaluationValue + "%");
+		} else {
+			if (confidenceValue > 1.0)
+				confidenceValue = 1.0;
+			evaluationValue = Math.abs(confidenceValue - (threshold));
+			evaluationValue = (evaluationValue + correctBoost) * 100;
+			System.out.println("Threshold:\t" + ConfidenceProvider.getPercentThresholdToDisplay(correctBoost, wrongBoost, threshold));
+			System.out.println("Fact evaluated as:\tTrue");
+			System.out.println("Matching percentage:\t" + evaluationValue + "%");
+		}
+	}
+
+	public static void evaluateFactFromFile(String fileName, Session session) throws FileNotFoundException {
+		TripleExtractor tripleExtractor = getTriples(fileName);
+
+		String subjectUri = FactCheckResource.getDBpediaUri(tripleExtractor.subject);
+		String predicateUri = tripleExtractor.predicate.getURI();
+		String objectUri = FactCheckResource.getDBpediaUri(tripleExtractor.object);
+
+		// Check for empty content
+		boolean cond1 = subjectUri.trim().length() == 0;
+		boolean cond2 = predicateUri.trim().length() == 0;
+		boolean cond3 = objectUri.trim().length() == 0;
+		if (cond1 || cond2 || cond3) {
+			System.out.println("Invalid File.");
+			return;
+		}
+
+		FactChecker factChecker = new FactChecker();
+		String[] triple = { subjectUri, predicateUri, objectUri };
+		double cfVal = factChecker.getFactCFValAdv(triple, session);
+
+		Double threshold = ConfidenceProvider.getConfidenceThreshold("correct_award_train_threshold.txt", "wrong_range_award_train_threshold.txt");
+		Double correctBoost = ConfidenceProvider.getCorrectBoost("correct_award_train_threshold.txt");
+		Double wrongBoost = ConfidenceProvider.getWrongBoost("wrong_range_award_train_threshold.txt");
+
+		evaluateFactFromConfidence(cfVal, threshold, correctBoost, wrongBoost);
 	}
 	
 	

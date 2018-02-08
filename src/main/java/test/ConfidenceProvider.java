@@ -1,6 +1,7 @@
 package test;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -168,8 +169,8 @@ public class ConfidenceProvider {
 			}
 			Double threshold = getConfidenceThreshold("correct_award_train_threshold.txt", "wrong_range_award_train_threshold.txt");
 			System.out.println(threshold);
-			double correctBoost = getAboveAverageCount(confidenceValueC.toArray(), Util.mean(confidenceValueC.toArray())) / (double) confidenceValueC.size();
-			double wrongBoost = getBelowAverageCount(confidenceValueW.toArray(), Util.mean(confidenceValueW.toArray())) / (double) confidenceValueW.size();
+			double correctBoost = getAboveAverageCount("correct_award_train_threshold.txt") / (double) confidenceValueC.size();
+			double wrongBoost = getBelowAverageCount("wrong_range_award_train_threshold.txt") / (double) confidenceValueW.size();
 			System.out.println("correct set boost:\t" + correctBoost);
 			System.out.println("wrong set boost:\t" + wrongBoost);
 			System.out.println(getPercentThresholdToDisplay(correctBoost, wrongBoost, threshold));
@@ -246,32 +247,108 @@ public class ConfidenceProvider {
 
 	/**
 	 * To be called by correct data set of CV
-	 * @param arr array of confidence values of correct train dataset
-	 * @param mean mean of above array
+	 * @param correctFile from file it will create array of confidence values of correct train dataset
 	 * @return count int of matching above average
 	 */
-	public static int getAboveAverageCount(Object[] arr, Double mean) {
-		int count = 0;
-		for (Object anArr : arr) {
-			if (Double.parseDouble(String.valueOf(anArr)) >= mean)
-				count++;
+	public static int getAboveAverageCount(String correctFile) {
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(correctFile));
+
+			String line;
+			ArrayList<String> confidenceValue = new ArrayList<>();
+			while ((line = br.readLine()) != null) {
+				String[] splitLine = line.split("\\s+");
+				confidenceValue.add(splitLine[4]);
+			}
+			int count = 0;
+			Double mean = Util.mean(confidenceValue.toArray());
+			for (Object anArr : confidenceValue.toArray()) {
+				if (Double.parseDouble(String.valueOf(anArr)) >= mean)
+					count++;
+			}
+			return count;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		return count;
+		return 0;
 	}
 
 	/**
 	 * To be called by wrong data set of CV
-	 * @param arr array of confidence values of wrong train dataset
-	 * @param mean mean of above array
+	 * @param wrongFile from file it will create  array of confidence values of wrong train dataset
 	 * @return count of matching below average
 	 */
-	public static int getBelowAverageCount(Object[] arr, Double mean) {
-		int count = 0;
-		for (Object anArr : arr) {
-			if (Double.parseDouble(String.valueOf(anArr)) <= mean)
-				count++;
+	public static int getBelowAverageCount(String wrongFile) {
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(wrongFile));
+
+			String line;
+			ArrayList<String> confidenceValue = new ArrayList<>();
+			while ((line = br.readLine()) != null) {
+				String[] splitLine = line.split("\\s+");
+				confidenceValue.add(splitLine[4]);
+			}
+			int count = 0;
+			Double mean = Util.mean(confidenceValue.toArray());
+			for (Object anArr : confidenceValue.toArray()) {
+				if (Double.parseDouble(String.valueOf(anArr)) <= mean)
+					count++;
+			}
+			return count;
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		return count;
+		return 0;
+	}
+
+	public static Double getCorrectBoost(String correctFile) {
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(correctFile));
+
+			String line;
+			ArrayList<String> confidenceValue = new ArrayList<>();
+			while ((line = br.readLine()) != null) {
+				String[] splitLine = line.split("\\s+");
+				confidenceValue.add(splitLine[4]);
+			}
+			int count = 0;
+			Double mean = Util.mean(confidenceValue.toArray());
+			for (Object anArr : confidenceValue.toArray()) {
+				if (Double.parseDouble(String.valueOf(anArr)) >= mean)
+					count++;
+			}
+			return count / (double) confidenceValue.size();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0.0;
+	}
+
+	public static Double getWrongBoost(String wrongFile) {
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(wrongFile));
+
+			String line;
+			ArrayList<String> confidenceValue = new ArrayList<>();
+			while ((line = br.readLine()) != null) {
+				String[] splitLine = line.split("\\s+");
+				confidenceValue.add(splitLine[4]);
+			}
+			int count = 0;
+			Double mean = Util.mean(confidenceValue.toArray());
+			for (Object anArr : confidenceValue.toArray()) {
+				if (Double.parseDouble(String.valueOf(anArr)) <= mean)
+					count++;
+			}
+			return count / (double) confidenceValue.size();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0.0;
 	}
 
 }

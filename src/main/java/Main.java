@@ -17,6 +17,7 @@ import org.hibernate.Session;
 import config.Config;
 import rdf.FactCheckResource;
 import rdf.TripleExtractor;
+import test.ConfidenceProvider;
 import test.FactChecker;
 import utils.HibernateUtils;
 
@@ -29,7 +30,7 @@ public class Main {
 	public static BufferedWriter bufferFileWriterDR;
 
 	static {
-		writeFileDR = new File("wrong_range_leader_det.tsv");
+		writeFileDR = new File("wrong_range_award_det.tsv");
 		try {
 			fileWriterDR = new FileWriter(writeFileDR, true);
 		} catch (IOException e) {
@@ -38,17 +39,35 @@ public class Main {
 		bufferFileWriterDR = new BufferedWriter(fileWriterDR);
 	}
 
+
+	public static void main(String[] args) throws IOException {
+		session.beginTransaction();
+
+		try {
+			FactChecker.evaluateFactFromFile("wrong.ttl", session);
+			FactChecker.evaluateFactFromFile("correct.ttl", session);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			System.out.println("Processing finished.");
+			session.getTransaction().commit();
+			session.close();
+		}
+	}
+
 	/*
 	 * Configuration of Hibernate and test with DB
 	 *
 	 * For Training and Feature Extractions, execute main of RulesExtraction.Java
 	 *
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void mainTest(String[] args) throws IOException {
 		session.beginTransaction();
 
 		try {
-			filesCrawler(Paths.get(Config.configInstance.testDataPath + "/wrong/range/leader"));
+			Double threshold = ConfidenceProvider.getConfidenceThreshold("correct_award_train_threshold.txt", "wrong_range_award_train_threshold.txt");
+
+			filesCrawler(Paths.get(Config.configInstance.testDataPath + "/wrong/range/award"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -91,7 +110,7 @@ public class Main {
 
 						String fileContent = fileName + "\t" + subjectUri + "\t" + predicateUri + "\t" + objectUri
 								+ "\t" + cfVal + "\n";
-						writeToFile("wrong_range_leader.txt", fileContent);
+						writeToFile("wrong_range_award_.txt", fileContent);
 						List<String> formatedRes = factChecker.getFormattedResult();
 						String detContent = fileName + "\t" + subjectUri + "\t" + predicateUri + "\t" + objectUri
 								+ "\t" + formatedRes.get(0) + "\t" + formatedRes.get(1) + "\t" + formatedRes.get(2) + "\t" + formatedRes.get(3) + "\n";

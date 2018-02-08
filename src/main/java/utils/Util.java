@@ -2,6 +2,7 @@ package utils;
 
 import org.apache.jena.base.Sys;
 import test.ConfidenceProvider;
+import test.FactChecker;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -10,6 +11,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static test.FactChecker.evaluateFactsFromListOfConfidence;
 
 public class Util {
     /**
@@ -58,37 +61,6 @@ public class Util {
         return Math.sqrt(variance(arr));
     }
 
-    /**
-     *
-     * @param confidenceValueList list of confidence values of triples that you need to evaluate
-     * @param threshold threshold that you calculated while training your dataset
-     */
-    public static void evaluateFactsFromListOfConfidence(ArrayList<String> confidenceValueList, Double threshold) {
-        int falseCount = 0;
-        int trueCount = 0;
-        Double cv;
-        Double diff;
-        for (int i = 0; i < confidenceValueList.size(); i++) {
-            cv = Double.parseDouble(confidenceValueList.get(i));
-            if (cv <= threshold) {
-                if (cv < -1.0)
-                    cv = -1.0;
-                diff = Math.abs(threshold - cv);
-                System.out.println("False:\t" + cv + "\t" + diff + "\t" + ((diff+0.2)*100));
-                falseCount++;
-            } else {
-                if (cv > 1.0)
-                    cv = 1.0;
-                diff = Math.abs(cv - (threshold));
-                System.out.println("True:\t" + cv + "\t" + diff + "\t" + ((diff+0.8)*100));
-                trueCount++;
-            }
-        }
-        System.out.println("false count:\t" + falseCount);
-        System.out.println("true count:\t" + trueCount);
-        System.out.println();
-    }
-
     public static void main(String[] args) throws IOException {
 
         try {
@@ -110,12 +82,14 @@ public class Util {
             }
 
             Double threshold = ConfidenceProvider.getConfidenceThreshold("correct_award_train_threshold.txt", "wrong_range_award_train_threshold.txt");
+            Double correctBoost = ConfidenceProvider.getCorrectBoost("correct_award_train_threshold.txt");
+            Double wrongBoost = ConfidenceProvider.getWrongBoost("wrong_range_award_train_threshold.txt");
 
             System.out.println("wrong/range/award");
-            evaluateFactsFromListOfConfidence(confidenceValueC, threshold);
+            evaluateFactsFromListOfConfidence(confidenceValueC, threshold, correctBoost, wrongBoost);
 
             System.out.println("correct/award");
-            evaluateFactsFromListOfConfidence(confidenceValueW, threshold);
+            evaluateFactsFromListOfConfidence(confidenceValueW, threshold, correctBoost, wrongBoost);
         } catch (IOException ignore) {
             // don't index files that can't be read.
             ignore.printStackTrace();
